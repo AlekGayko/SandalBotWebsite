@@ -1,0 +1,49 @@
+#play {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.board {
+    position: relative;
+    min-width: 100px;
+    min-height: 100px;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    align-items: center;
+    justify-content: center;
+}
+
+.square {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dark {
+    background-color: rgb(209, 126, 3);
+}
+
+.bright {
+    background-color: rgb(255, 202, 152);
+}
+
+.overlaySquare {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 12.5%;
+    height: 12.5%;
+}
+
+.overlaySquare > .circle {
+    width: 100%;
+    height: 100%;
+    clip-path: circle(10%);
+    background-color: #00000044;
+}

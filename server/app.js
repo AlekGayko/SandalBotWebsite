@@ -1,12 +1,13 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var session = require('express-session');
-var mysql = require('mysql');
+import createError from 'http-errors';
+import express from 'express';
+import path, { dirname } from 'path';
+import cookieParser from 'cookie-parser';
+import logger from 'morgan';
+import session from 'express-session';
+import mysql from 'mysql';
+import { fileURLToPath } from 'url';
 
-var apiRouter = require('./routes/api');
+import apiRouter from './routes/api.js';
 
 var app = express();
 
@@ -32,9 +33,12 @@ app.use(session({
   cookie: { secure: false }
 }));
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 app.use(express.static(path.join(__dirname, '../client/build')));
 
-app.use('./api', apiRouter);
+app.use('/api', apiRouter);
 
 app.get('*', function(req, res, next) {
   res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
@@ -45,4 +49,4 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
-module.exports = app;
+export default app;
