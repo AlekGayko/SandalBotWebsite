@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+
+
+/**
+ * This is an example of a modified www file from the express generator that uses HTTPS instead of HTTP, but also redirects all HTTP traffic to HTTPS
+ * The file should replace the file in bin/www
+ * It expects 2 environment variables; PORT and HTTPS_PORT (defaulting to 3000 and 3001 respectively if not present)
+ * HTTPS certificates should go in a folder named 'ssl' in your app's main directory. You will need to provide a private key named 'server.key', certificate 'certificate.cer', and intermediate cert/CA cert 'intermediate.cer'
+ */
+
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('webapp:server');
+var fs = require('fs');
+var path = require('path');
+var http = require('http');
+var https = require('https');
+var server = null;
+var port = null;
+
+if('HTTPS_PORT' in process.env){
+    // Get port from environment and store in Express.
+    port = normalizePort(process.env.HTTPS_PORT || '3001');
+    app.set('port', port);
+
+    // Create HTTPS server, including certificates
+    server = https.createServer({
+        key: fs.readFileSync(path.join(__dirname, '../ssl/server.key')),
+        cert: fs.readFileSync(path.join(__dirname, '../ssl/certificate.cer')),
+        ca: fs.readFileSync(path.join(__dirname, '../ssl/intermediate.cer'))
+    }, app);
+} else {
+    // Get port from environment and store in Express.
+    port = normalizePort(process.env.PORT || '3000');
+    app.set('port', port);
+
+    // Create HTTP server.
+    server = http.createServer(app);
+}
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+
+/**
+ * Redirect from http port to https
+ */
+if('PORT' in process.env && 'HTTPS_PORT' in process.env){
+    // Create HTTP server on HTTP port
+    http.createServer(function (req, res) {
+        // Send 301 (Moved Permanently) response to all requests on this server, redirecting to HTTPS URL.
+        res.writeHead(301, { "Location": "https://" + req.headers.host.replace(/:[0-9]{1,5}$/,':'+port) + req.url });
+        res.end();
+    }).listen(normalizePort(process.env.PORT || '3000'));
+}
+
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
