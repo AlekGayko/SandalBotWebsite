@@ -4,6 +4,7 @@ import chess from 'chess';
 import axios from 'axios';
 import './../Board.css';
 import LegalMove from "./LegalMove";
+import PromotionMenu from "./PromotionMenu";
 
 class Board extends Component {
     constructor(props) {
@@ -14,6 +15,9 @@ class Board extends Component {
             move: null,
             selectedCoord: null,
             selectedIndex: null,
+            promotionColor: null,
+            promotingCoord: null,
+            promoting: null,
             waitingForMove: false
         };
 
@@ -43,17 +47,36 @@ class Board extends Component {
     }
 
     getMove() {
-        axios.get('/api/bot-move')
-        .then(response => {
-            console.log('get-move response:', response);
-            this.gameClient.move(response.move);
-            this.setState({
-                waitingForMove: false
-            });
-        })
-        .catch(error => {
-            console.log(error);
-        })
+        const endTime = Date.now() + 10000;
+        const intervalDuration = 1000
+        let intervalId;
+        const fetchMove = async () => { 
+            try {
+                const response = await axios.get('/api/bot-move');
+                console.log(response);
+                if (response.status === 200) {
+                    console.log(`move: ${response.data.move}`);
+                    this.state.gameClient.move(response.data.move);
+                    this.setState({
+                        waitingForMove: false
+                    });
+                    clearInterval(intervalId);
+                } else if (response.status === 202) {
+                    console.log(`Status 202: ${response.data.message}`);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        };
+
+        intervalId = setInterval(() => {
+            if (Date.now() >= endTime) {
+                clearInterval(this.intervalId);
+            } else {
+                fetchMove();
+            }
+        }, intervalDuration);
+
     }
 
     selectPiece = (coord) => {
@@ -66,12 +89,19 @@ class Board extends Component {
         const index = (row * 8) + col;
 
         this.setState({
+            promotingCoord: null,
+            promoting: false,
             selectedCoord: coord,
             selectPiece: index
         })
     }
 
-    makeMove = (coord) => {
+    selectPromotionType = (piece) => {
+        this.makeMove(this.state.promotingCoord, piece);
+    }
+
+    makeMove = (coord, promotionType) => {
+        console.log('MAKING MOVE!')
         if (this.state.waitingForMove) {
             return;
         }
@@ -81,24 +111,44 @@ class Board extends Component {
         const destFile = coord[0];
         const destRank = parseInt(coord[1]);
 
-        const moves = this.state.gameClient.notatedMoves
+        let piece = null;
+        piece = this.state.gameClient.validMoves.find(move => move.src.file === srcFile && move.src.rank === srcRank);
+        const color = piece.src.piece.side.name;
+        piece = piece.src.piece.type;
+
+        if (!promotionType && piece === "pawn" && (destRank === 8 || destRank === 1)) {
+            this.setState({
+                promotingCoord: coord,
+                promotionColor: color,
+                promoting: true,
+            });
+            return;
+        }
+
+        const moves = this.state.gameClient.notatedMoves;
         let move = null;
         for (let key in moves) {
             if (moves[key].src.file === srcFile && moves[key].src.rank === srcRank
                 && moves[key].dest.file === destFile && moves[key].dest.rank === destRank) {
                 move = key.toString();
-                break;
+                if (promotionType && move[move.length - 1] === promotionType) {
+                    break;
+                } else if (!promotionType) {
+                    break;
+                }
             }
         }
 
         let madeMove = this.state.gameClient.move(move);
 
         this.setState({
+            promoting: null,
+            promotingCoord: null,
             selectedCoord: null,
             selectPiece: null,
             waitingForMove: true
         });
-
+        console.log(this.state.gameClient);
         this.sendMove(move);
         this.getMove();
     }
@@ -137,7 +187,14 @@ class Board extends Component {
                             ''
                         )
                     }
-                </div>
+                    </div>
+                    {
+                        this.state.promoting ? (
+                            <PromotionMenu color={this.state.promotionColor} select={this.selectPromotionType}/>
+                        ) : (
+                            ''
+                        )
+                    }
                 </div>
             </React.Fragment>
         );

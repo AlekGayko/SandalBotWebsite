@@ -1,6 +1,61 @@
 import { spawn } from 'node:child_process';
 import chess from 'chess';
 
+class Move {
+    constructor(gameClient, move, isAlgebraic) {
+        this.algebraic = null;
+        this.bot = null;
+
+        if (isAlgebraic) {
+            this.algebraic = move.move.algebraic;
+            this.bot = this.algebraicToBot(move);
+        } else {
+            this.bot = move;
+            this.algebraic = this.botToAlgebraic(gameClient, move);
+        }
+    }
+
+    algebraicToBot(move) {
+        let moveStr = '';
+        moveStr += move.move.prevSquare.file + move.move.prevSquare.rank;
+        moveStr += move.move.postSquare.file + move.move.postSquare.rank;
+        console.log(move);
+        const promotionType = move.move.algebraic[move.move.algebraic.length - 1];
+        if (promotionType.toUpperCase() === promotionType && promotionType !== 'O') {
+            moveStr += promotionType.toLowerCase();
+        }
+        return moveStr;
+    }
+
+    botToAlgebraic(gameClient, move) {
+        const srcFile = move[0];
+        const srcRank = parseInt(move[1]);
+        const destFile = move[2];
+        const destRank = parseInt(move[3]);
+        let promotionType = null;
+        if (move.length === 5) {
+            promotionType = move[4].toUpperCase();
+        }
+
+        const moves = gameClient.notatedMoves;
+
+        let moveStr = null;
+        for (let key in moves) {
+            if (moves[key].src.file === srcFile && moves[key].src.rank === srcRank
+                && moves[key].dest.file === destFile && moves[key].dest.rank === destRank) {
+                moveStr = key.toString();
+                if (promotionType && move[move.length - 1] === promotionType) {
+                    return moveStr;
+                } else if (!promotionType) {
+                    return moveStr;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
 // Game class abstracts the chess engine process and state
 class Game {
     constructor(id, goFirst) {
@@ -9,6 +64,7 @@ class Game {
         this.childProcess = null;
         this.outputs = [];
         this.moves = [];
+        this.moveStrList = '';
         this.gameClient = chess.create();
         this.isBotMove = goFirst;
         this.startProcess();
@@ -56,59 +112,48 @@ class Game {
         }
 
         this.isBotMove = true;
-        console.log(`move: ${moveInput}`);
-        const move = this.gameClient.move(moveInput);
-        console.log(move);
-        let moveStr = '';
-        moveStr += move.move.prevSquare.file + move.move.prevSquare.rank;
-        moveStr += move.move.postSquare.file + move.move.postSquare.rank;
-        
-        console.log(moveStr)
-        this.moves.push(move);
 
-        this.childProcess.stdin.write(moveInput + '\r\n');
+        const algebraicMove = this.gameClient.move(moveInput);
+
+        const move = new Move(this.gameClient, algebraicMove, true);
+
+        this.moveStrList += `${move.bot} `;
+
+        const positionCommand = `position startpos moves ${this.moveStrList}\r\n`;
+        this.childProcess.stdin.write(positionCommand);
     }
 
     generateMove() {
         if (this.isBotMove === false) {
             return;
         }
-        
-        let command = 'go movetime 100\r\n';
-        this.childProcess.stdin.write(command);
+        let moveCommand = 'go movetime 100\r\n';
+        this.childProcess.stdin.write(moveCommand);
     }
 
-    // Get move made by engine
+    // Get move made by engine`
     getMove() {
         if (this.isBotMove === false) {
             return null;
         }
 
-        let moveInfo = ['', ''];
-        let move = '';
-        while (moveInfo[0] !== 'bestmove') {
-            const output = this.outputs[this.outputs.length - 1];
+        const output = this.outputs[this.outputs.length - 1];
 
-            moveInfo = output.split(" ");
-            move = moveInfo[1];
+        const moveInfo = output.trim().split(" ");
+
+        if (moveInfo.length === 0 || moveInfo[0] !== 'bestmove') {
+            return null;
         }
 
-        const srcFile = move[0];
-        const srcRank = parseInt(move[1]);
-        const destFile = move[2];
-        const destRank = parseInt(move[3]);
+        const moveStr = moveInfo[1];
 
-        const moves = this.gameClient.notatedMoves
+        const move = new Move(this.gameClient, moveStr, false);
 
-        for (let key in moves) {
-            if (moves[key].src.file === srcFile && moves[key].src.rank === srcRank
-                && moves[key].dest.file === destFile && moves[key].dest.rank === destRank) {
-                move = key.toString();
-                break;
-            }
-        }
+        this.gameClient.move(move.algebraic);
+        this.moveStrList += `${move.bot} `;
         this.isBotMove = false;
-        return move;
+
+        return move.algebraic;
     }
 
     // Get all legal moves in position

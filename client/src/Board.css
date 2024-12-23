@@ -47,3 +47,11 @@
     clip-path: circle(10%);
     background-color: #00000044;
 }
+
+.promotionMenu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+}

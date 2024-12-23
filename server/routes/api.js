@@ -30,7 +30,7 @@ router.post('/make-move', function(req, res, next) {
     const id = req.session.gameId;
     const move = req.body.move;
     const game = games.find(item => item.id === id);
-    console.log(req.body);
+
     if (!game) {
         console.error('Game not Found.');
         res.sendStatus(500);
@@ -81,6 +81,8 @@ router.delete('/quit', function(req, res, next) {
     console.log(games);
     console.log(games.length);
 
+    req.session.gameId = null;
+    
     res.sendStatus(204);
 });
 
