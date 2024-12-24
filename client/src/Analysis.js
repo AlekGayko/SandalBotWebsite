@@ -4,16 +4,16 @@ import './Board.css'
 import Nav from './components/Nav';
 import Footer from './components/Footer';
 
-function Play() {
+function Analysis() {
     return (
         <div className="pageWrapper">
             <Nav />
-            <div id="play">
+            <main>
                 <Board />
-            </div>
+            </main>
             <Footer />
         </div>
     )
 }
 
-export default Play;
+export default Analysis;

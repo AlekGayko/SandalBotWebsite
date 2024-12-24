@@ -5,20 +5,30 @@ import Footer from './components/Footer';
 
 function Home() {
     return (
-        <div className="homeWrapper">
+        <div className="pageWrapper">
             <Nav />
             <main>
                 <section className="titleScreen">
-                    <div>
-                        <h1>SandalBot Chess Engine</h1>
-                        <p>
-                            An alpha-beta search engine written in C++
-                        </p>
+                    <div className='title'>
+                        <h1>SandalBot</h1>
+                        <h1>Open-source chess engine</h1>
+                        <h2>
+                            An alpha-beta search engine written in C++ by Aleksander Gayko.
+                        </h2>
                     </div>
-                    <div className="playButton">
-                        <a href="/play">Play SandalBot</a>
-                    </div>
+                    <img src="pawn.png" height="200px"></img>
                 </section>
+                <div className="horizontalLine"></div>
+                <section className="homeDetails">
+                    Download, documentation, and more.
+                    <div>
+                        <button>Download</button>
+                        <a href="https://github.com/DirtySandals/SandalBotV2"><button>View on GitHub</button></a>
+                        <a href="https://lichess.org/@/SandalBot"><button>View on Lichess</button></a>
+                    </div>
+
+                </section>
+                
             </main>
             <Footer />
         </div>

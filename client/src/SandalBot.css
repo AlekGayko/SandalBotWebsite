@@ -1,0 +1,120 @@
+:root {
+    --primary-color: rgb(51, 51, 51);
+    --secondary-color: rgb(0, 0, 0);
+    --third-color: rgb(55, 65, 81);
+    --background-color: rgb(14, 15, 56);
+    --opposite-color: rgb(255, 255, 255);
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    color: var(--opposite-color)
+}
+
+.pageWrapper {
+    min-height: 100vh;
+    width: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    background-color: var(--background-color);
+}
+
+#navbar {
+    background-color: var(--secondary-color);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#navbar a {
+    color: var(--opposite-color);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.25rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    line-height: 4rem;
+}
+
+#navbar a:hover {
+    background-color: var(--opposite-color);
+    color: var(--primary-color);
+}
+
+main {
+    width: 70%;
+    transform: translate(15%, 0);
+    background-color: var(--primary-color);
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+    padding-left: 10%;
+    padding-right: 10%;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+}
+
+#footer {
+    box-sizing: border-box;
+    background-color: var(--secondary-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.25rem;
+    position: relative;
+}
+
+.footerText {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.footerText > p {
+    color: var(--opposite-color);
+    margin: 0.5rem;
+}
+
+.footerGit {
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    transform: translate(0%, -50%);
+}
+
+.footerLichess {
+    position: absolute;
+    top: 50%;
+    left: 5%;
+    transform: translate(55%, -48%);
+}
+
+#footer i, #footer img {
+    color: var(--opposite-color);
+    display: inline;
+    font-size: 2rem;
+    height: 3.8rem;
+}
+
+#footer a {
+    text-decoration: none;
+}
+
+.verticalLine {
+    background-color: var(--opposite-color);
+    width: 5px;
+    height: 90%;
+    border-radius: 2px;
+}
+
+.horizontalLine {
+    background-color: var(--third-color);
+    width: 90%;
+    height: 2px;
+    border-radius: 2px;
+}
