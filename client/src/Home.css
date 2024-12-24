@@ -59,6 +59,7 @@ section {
     justify-content: start;
     width: 100%;
     gap: 1rem;
+    font-weight: 600;
 }
 
 .homeDetails > div {

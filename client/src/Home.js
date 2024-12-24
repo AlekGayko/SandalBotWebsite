@@ -16,7 +16,7 @@ function Home() {
                             An alpha-beta search engine written in C++ by Aleksander Gayko.
                         </h2>
                     </div>
-                    <img src="pawn.png" height="200px"></img>
+                    <img src="pawn.ico" height="200px"></img>
                 </section>
                 <div className="horizontalLine"></div>
                 <section className="homeDetails">

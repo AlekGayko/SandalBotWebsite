@@ -22,6 +22,7 @@
 }
 
 #navbar {
+    position: relative;
     background-color: var(--secondary-color);
     width: 100%;
     display: flex;
@@ -42,6 +43,20 @@
 #navbar a:hover {
     background-color: var(--opposite-color);
     color: var(--primary-color);
+}
+
+.navLogo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translate(50%, 50%);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.navLogo h4 {
+    font-size: 1.2rem;
 }
 
 main {
