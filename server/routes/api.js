@@ -1,9 +1,24 @@
 import express from 'express';
 const router = express.Router();
 import Game from './../game.js';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 var gameIdCounter = 1;
 var games = [];
+
+router.get('/download-binary', function(req, res, next) {
+    const filePath = path.join(__dirname, './../engines/', 'SandalBotV2.exe');
+    res.download(filePath, (err) => {
+        if (err) {
+            console.error('File download error:', err);
+            res.status(500).send('File download failed.');
+        }
+    });
+});
 
 router.post('/start-game', function(req, res, next) {
     console.log(req.session);

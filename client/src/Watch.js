@@ -1,8 +1,8 @@
 import React from 'react';
-import Board from './components/Board';
-import './Board.css'
 import Nav from './components/Nav';
 import Footer from './components/Footer';
+import LichessGames from './components/LichessGames';
+import "./Watch.css";
 
 function Watch() {
     return (
@@ -10,6 +10,8 @@ function Watch() {
             <Nav />
             <main>
                 <h1>Watch</h1>
+                <div className="horizontalLine"></div>
+                <LichessGames />
             </main>
             <Footer />
         </div>
