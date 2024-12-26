@@ -1,19 +1,29 @@
-.gamesContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+main {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+iframe {
+    max-width: 100%;
+    width: 400px;
+    height: 450px;
+    display: block;
+
 }
 
 .games {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 1rem;
+    margin: auto;
 }
 
-.games iframe {
-    width: 203px;
-    height: 300px;
+.slick-slider {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.slick-dots li.slick-active button::before {
+    color: var(--opposite-color) !important;
+}
+
+.slick-dots {
+    margin: 0 auto;
 }

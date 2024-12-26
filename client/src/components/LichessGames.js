@@ -1,15 +1,17 @@
 import React, { Component } from "react";
 import axios from "axios";
-import pgnParser from 'pgn-parser';
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick-theme.css";
 
 class LichessGames extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
-            maxGames: 9,
-            currentUrls: null,
-            oldGameUrls: null
+            maxGames: props.maxGames,
+            urls: null,
+            finished: props.finished
         }
     }
 
@@ -36,31 +38,13 @@ class LichessGames extends Component {
         return urls;
     }
 
-    getCurrentGames() {
-        axios.get(`https://lichess.org/api/games/user/SandalBot?max=${this.state.maxGames}&moves=false&finished=false`)
+    getGames() {
+        axios.get(`https://lichess.org/api/games/user/SandalBot?max=${this.state.maxGames}&moves=false&finished=${this.state.finished}`)
         .then(response => {
             let urls = this.parsePGNs(response.data);
-            if (urls.length > 0) {
-                this.setState({
-                    currentUrls: urls
-                })
-            }
-        })
-        .catch(error => {
-            console.log(error);
-        })
-    }
-
-    getOldGames() {
-        axios.get(`https://lichess.org/api/games/user/SandalBot?max=${this.state.maxGames}&moves=false&finished=true`)
-        .then(response => {
-            let urls = this.parsePGNs(response.data);
-
-            if (urls.length > 0) {
-                this.setState({
-                    oldGameUrls: urls
-                })
-            }
+            this.setState({
+                urls: urls
+            })
         })
         .catch(error => {
             console.log(error);
@@ -68,30 +52,64 @@ class LichessGames extends Component {
     }
 
     componentDidMount() {
-        this.getCurrentGames();
-        this.getOldGames();
+        this.getGames(); 
     }
 
     render() {
+        const settings = {
+            dots: true,
+            infinite: true,
+            speed: 500,
+            slidesToShow: 3,
+            slidesToScroll: 3,
+            responsive: [
+                {
+                  breakpoint: 1400,
+                  settings: {
+                    slidesToShow: 2,
+                    slidesToScroll: 2,
+                    infinite: true,
+                    dots: true
+                  }
+                },
+                {
+                  breakpoint: 950,
+                  settings: {
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    initialSlide: 2
+                  }
+                }
+              ]
+          };
+
+        const { urls } = this.state;
+        
         return (
-            <div className="gamesContainer">
-                <h2>Current Games</h2>
-                <div className="games">
-                    {
-                        this.state.currentUrls ?
-                        this.state.currentUrls.map((gameUrl, key) => <iframe src={gameUrl + "?them=autho&bg=auto#5"} frameBorder={0} key={key} scrolling="no"></iframe>)
-                        : 'No Current Games'
-                    }
-                </div>
-                <div className="horizontalLine"></div>
-                <h2>Most Recent Games</h2>
-                <div className="games">
-                    {
-                        this.state.oldGameUrls ?
-                        this.state.oldGameUrls.map((gameUrl, key) => <iframe src={gameUrl + "?them=autho"} frameBorder={0} key={key} scrolling="no"></iframe>)
-                        : 'Loading...'
-                    }
-                </div>
+            <div className="games">
+                {
+                    urls ? (
+                        urls.length ? (
+                            <Slider {...settings}>
+                                {
+                                    urls.map((gameUrl, key) => 
+                                        <iframe 
+                                            src={gameUrl + "?them=autho"} 
+                                            frameBorder={0} 
+                                            key={key} 
+                                            scrolling="no" 
+                                            title="Lichess Game"
+                                        ></iframe>
+                                    )
+                                }
+                            </Slider>
+                        ) : (
+                            <p>No Games Found</p>
+                        )
+                    ) : (
+                        <div className="loader"></div>
+                    )
+                }
             </div>
         )
     }
