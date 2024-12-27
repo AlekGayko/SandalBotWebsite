@@ -9,7 +9,6 @@ function Watch() {
         <div className="pageWrapper">
             <Nav />
             <main>
-                <div className="horizontalLine"></div>
                 <h2>Current Games</h2>
                 <LichessGames finished={false} maxGames={3}/>
                 <div className="horizontalLine"></div>
