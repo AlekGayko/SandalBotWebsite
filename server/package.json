@@ -7,7 +7,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "chess": "^1.2.2",
+    "chess.js": "^1.0.0-beta.8",
     "child_process": "^1.0.2",
     "child-process": "^1.0.2",
     "cookie-parser": "~1.4.4",

@@ -14,26 +14,39 @@ class PlayBoard extends Component {
             showPromotionDialog: false,
             rightClickedSquares: false,
             moveSquares: {},
-            optionSquares: {}
+            optionSquares: {},
+            orientation: this.props.firstMove,
+            isBotTurn: false,
+            moveTime: 500
         }
     }
 
     // Start game on server
-    componentDidMount() {
-        axios.post('/api/start-game')
-        .then(response => {
-            console.log(response);            
-        })
-        .catch(error => {
-            console.log(error);
-        });
+    async componentDidMount() {
+        await this.startGame();
 
         if (this.props.firstMove === "black") {
-            this.getBotMove()
+            await this.generateBotMove();
+
         }
     }
 
-    getBotMove = () => {
+    startGame = async () => {
+        try {
+            let response = await axios.post('/api/start-game')
+            .then(response => {
+                console.log(response);            
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        } catch (err) {
+            console.error(err);
+            throw err;
+        }
+    }
+
+    getBotMove = async () => {
         const endTime = Date.now() + 10000;
         let intervalId;
         let move = null;
@@ -43,10 +56,22 @@ class PlayBoard extends Component {
                 console.log(response);
                 if (response.status === 200) {
                     console.log(`move: ${response.data.move}`);
-                    this.state.game.move(response.data.move);
+                    let moveData = response.data.move;
+                    console.log(this.state.game.ascii());
+                    console.log(this.state.game);
+                    const gameCopy = new Chess(this.state.game.fen());
+                    const move = gameCopy.move({
+                        from: moveData.slice(0, 2),
+                        to: moveData.slice(2, 4),
+                        promotion: moveData.length === 5 ? moveData[4] : "q"
+                    });
+                    this.setState({
+                        game: gameCopy,
+                        isBotTurn: false
+                    });
                     clearInterval(intervalId);
                 } else if (response.status === 202) {
-                    console.log(`Status 202: ${response.data.message}`);
+                    console.log(`${response.data.message}`);
                 }
             } catch (err) {
                 console.log(err);
@@ -59,7 +84,19 @@ class PlayBoard extends Component {
             } else {
                 fetchMove();
             }
+        }, this.state.moveTime * 2);
+    }
+
+    generateBotMove = async () => {
+        this.setState({
+            isBotTurn: true
         });
+        try {
+            let response = await axios.post('/api/generate-move', { fen: this.state.game.fen(), moveTime: this.state.moveTime })
+            await this.getBotMove();
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     getMoveOptions = (square) => {
@@ -100,6 +137,10 @@ class PlayBoard extends Component {
         this.setState({
             rightClickedSquares: {}
         });
+
+        if (this.state.isBotTurn) {
+            return;
+        }
 
         // from square
         if (!this.state.moveFrom) {
@@ -167,16 +208,16 @@ class PlayBoard extends Component {
 
             this.setState({
                 game: gameCopy,
+            }, () => {
+                this.generateBotMove();
+                setTimeout(this.state.moveTime * 2);
             });
-
-            setTimeout(this.getBotMove, 300);
 
             this.setState({
                 moveFrom: "",
                 moveTo: null,
                 optionSquares: {}
             });
-
             return;
         }
     }
@@ -194,11 +235,15 @@ class PlayBoard extends Component {
     }
 
     onPromotionPieceSelect = (piece) => {
+        if (this.state.isBotTurn) {
+            return false;
+        }
         // if no piece passed then user has cancelled dialog, don't make move and reset
         if (piece) {
             const gameCopy = {
                 ...this.state.game
             };
+            
             gameCopy.move({
                 from: this.state.moveFrom,
                 to: this.state.moveTo,
@@ -206,8 +251,10 @@ class PlayBoard extends Component {
             });
             this.setState({
                 game: gameCopy
+            }, () => {
+                this.generateBotMove();
+                setTimeout(this.state.moveTime * 2);
             });
-            setTimeout(this.getBotMove, 300);
         }
 
         this.setState({
@@ -222,17 +269,23 @@ class PlayBoard extends Component {
 
 
     render() {
-        const { game, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog } = this.state;
+        const { game, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog, orientation } = this.state;
         return (
-            <div className="boardContainer">
-                <Chessboard id="ClickToMove" position={game.fen()} boardOrientation={this.props.firstMove === "black" ? "black" : "white"} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
-                }} customSquareStyles={{
-                    ...moveSquares,
-                    ...optionSquares,
-                    ...rightClickedSquares
-                }} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+            <div>
+                <button>Back</button>
+                <div className="boardContainer">
+                    <Chessboard id="ClickToMove" position={game.fen()} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
+                        borderRadius: "4px",
+                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
+                    }} customSquareStyles={{
+                        ...moveSquares,
+                        ...optionSquares,
+                        ...rightClickedSquares
+                    }} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+                </div>
+                <button>Resign</button>
+                <button onClick={() => {this.setState({ orientation: this.state.orientation === "white" ? "black" : "white"})}}>Flip Board</button>
+                {/* <button onClick={() => { const gameCopy = new Chess(game.fen());console.log(game); gameCopy.undo(); this.setState({ game: gameCopy })}}>Undo</button> */}
             </div>
         )
     }

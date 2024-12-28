@@ -1,77 +1,20 @@
 import { spawn } from 'node:child_process';
-import chess from 'chess';
-
-class Move {
-    constructor(gameClient, move, isAlgebraic) {
-        this.algebraic = null;
-        this.bot = null;
-
-        if (isAlgebraic) {
-            this.algebraic = move.move.algebraic;
-            this.bot = this.algebraicToBot(move);
-        } else {
-            this.bot = move;
-            this.algebraic = this.botToAlgebraic(gameClient, move);
-        }
-    }
-
-    algebraicToBot(move) {
-        let moveStr = '';
-        moveStr += move.move.prevSquare.file + move.move.prevSquare.rank;
-        moveStr += move.move.postSquare.file + move.move.postSquare.rank;
-        console.log(move);
-        const promotionType = move.move.algebraic[move.move.algebraic.length - 1];
-        if (promotionType.toUpperCase() === promotionType && promotionType !== 'O') {
-            moveStr += promotionType.toLowerCase();
-        }
-        return moveStr;
-    }
-
-    botToAlgebraic(gameClient, move) {
-        const srcFile = move[0];
-        const srcRank = parseInt(move[1]);
-        const destFile = move[2];
-        const destRank = parseInt(move[3]);
-        let promotionType = null;
-        if (move.length === 5) {
-            promotionType = move[4].toUpperCase();
-        }
-
-        const moves = gameClient.notatedMoves;
-
-        let moveStr = null;
-        for (let key in moves) {
-            if (moves[key].src.file === srcFile && moves[key].src.rank === srcRank
-                && moves[key].dest.file === destFile && moves[key].dest.rank === destRank) {
-                moveStr = key.toString();
-                if (promotionType && move[move.length - 1] === promotionType) {
-                    return moveStr;
-                } else if (!promotionType) {
-                    return moveStr;
-                }
-            }
-        }
-
-        return null;
-    }
-}
+import { Chess } from "chess.js";
 
 // Game class abstracts the chess engine process and state
 class Game {
-    constructor(id, goFirst) {
+    constructor(id) {
         this.id = id;
         this.exePath = process.env.ENGINE;
         this.childProcess = null;
-        this.outputs = [];
-        this.moves = [];
-        this.moveStrList = '';
-        this.gameClient = chess.create();
-        this.isBotMove = goFirst;
-        this.startProcess();
+        this.prevInfo = {};
+        this.prevBestMove = "";
+        this.currInfo = {};
+        this.generatingMove = false;
+        this.isAnalysing = false;
+        this.gameClient = new Chess();
 
-        if (goFirst) {
-            this.generateMove();
-        }
+        this.startProcess();
     }
 
     // Start chess engine process
@@ -79,8 +22,20 @@ class Game {
         this.childProcess = spawn(this.exePath);
 
         this.childProcess.stdout.on('data', (data) => {
-            this.outputs.push(data.toString());
-            console.log(data.toString());
+            let res = data.toString();
+            console.log(res);
+            res = res.trim().split(" ");
+            if (res.length === 0) {
+                return;
+            } else if (res[0] === "info") {
+                const info = this.processInfo(res);
+                this.currInfo = info;
+            } else if (res[0] === "bestmove") {
+                this.prevInfo = this.currInfo;
+                this.currInfo = {};
+                this.prevBestMove = res[1];
+                this.generatingMove = false;
+            }
         });
 
         this.childProcess.on('close', (code) => {
@@ -100,70 +55,119 @@ class Game {
 
     // Kill the chess engine process
     killProcess() {
+        if (this.isAnalysing === true) {
+            this.childProcess.stdin.write('stop\r\n');
+        }
         this.childProcess.stdin.write('quit\n');
+    }
 
-        //this.childProcess.kill();
+    processInfo(info) {
+        let infoObj = {};
+        // Remove 'info' tag at start
+        info.shift()
+        let pvSeen = false;
+        info.forEach((element, index) => {
+            switch (element) {
+                case "score":
+                    if (info[index + 1] === "cp") {
+                        infoObj[element] = info[index + 2];
+                    } else if (info[index + 1] === "mate") {
+                        infoObj[element] = info[index + 1] + info[index + 2];
+                    }
+                    break;
+                case "pv":
+                    infoObj[element] = "";
+                    if (index === info.length - 1) {
+                        break;
+                    }
+                    let pvMoves = ""
+                    for (let i = index + 1; i < info.length; i++) {
+                        pvMoves += info[i];
+                        if (i !== info.length - 1) {
+                            pvMoves += " ";
+                        }
+                    }
+                    infoObj[element] = pvMoves;
+                    pvSeen = true;
+                    break;
+                default:
+                    const num = parseFloat(element);
+                    if (!Number.isNaN(num)) {
+                        break;
+                    }
+                    if (pvSeen) {
+                        break;
+                    }
+                    if (element === "cp" || element === "mate") {
+                        break;
+                    }
+
+                    infoObj[element] = info[index + 1];
+
+                    break;
+            }
+        });
+
+        return infoObj;
     }
 
     // Receive move and make move on game client and the chess engine
-    inputMove(moveInput) {
-        if (this.isBotMove === true) {
-            return;
+    inputMove(fenStr, moveObj) {
+        if (this.generatingMove === true || this.isAnalysing === true) {
+            return null;
         }
 
-        this.isBotMove = true;
+        this.gameClient = new Chess(fenStr);
+        const move = this.gameClient.move({
+            from: moveObj.from,
+            to: moveObj.to,
+            promotion: moveObj.promotion
+        });
 
-        const algebraicMove = this.gameClient.move(moveInput);
-
-        const move = new Move(this.gameClient, algebraicMove, true);
-
-        this.moveStrList += `${move.bot} `;
-
-        const positionCommand = `position startpos moves ${this.moveStrList}\r\n`;
+        const positionCommand = `position fen ${fenStr} moves ${move.lan}\r\n`;
         this.childProcess.stdin.write(positionCommand);
     }
 
-    generateMove() {
-        if (this.isBotMove === false) {
-            return;
+    generateMove(fen, moveTime=100) {
+        if (this.generatingMove === true || this.isAnalysing === true) {
+            return null;
         }
-        let moveCommand = 'go movetime 100\r\n';
+        if (!moveTime) {
+            moveTime = 100;
+        }
+
+        this.generatingMove = true;
+
+        const positionCommand = `position fen ${fen}\r\n`;
+        this.childProcess.stdin.write(positionCommand);
+
+        let moveCommand = `go movetime ${moveTime}\r\n`;
         this.childProcess.stdin.write(moveCommand);
     }
 
     // Get move made by engine`
     getMove() {
-        if (this.isBotMove === false) {
+        if (this.generatingMove === true || this.isAnalysing === true) {
             return null;
         }
 
-        const output = this.outputs[this.outputs.length - 1];
-
-        const moveInfo = output.trim().split(" ");
-
-        if (moveInfo.length === 0 || moveInfo[0] !== 'bestmove') {
+        if (this.prevBestMove === "") {
             return null;
         }
 
-        const moveStr = moveInfo[1];
-
-        const move = new Move(this.gameClient, moveStr, false);
-
-        this.gameClient.move(move.algebraic);
-        this.moveStrList += `${move.bot} `;
-        this.isBotMove = false;
-
-        return move.algebraic;
+        return this.prevBestMove;
     }
 
-    // Get all legal moves in position
-    getLegalMoves() {
-        return this.gameClient.getStatus();
+    startAnalysis() {
+        if (this.generatingMove === true || this.isAnalysing === true) {
+            return null;
+        }
+        this.isAnalysing = true;
+        this.childProcess.stdin.write(`go\r\n`);
     }
 
-    // Get status of game
-    getStatus() {
-        return this.gameClient.getStatus();
+    getAnalysis() {
+        return this.currInfo;
     }
 }
 
