@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
-import Board from './components/Board';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
-import { Chessboard } from "react-chessboard";
 import "./Play.css";
 import TimeControls from './components/TimeControls';
 import PlayBoard from './components/PlayBoard';
@@ -32,14 +30,22 @@ class Play extends Component {
         });
     }
 
+    back = () => {
+        this.setState({
+            settingsConfirmed: false
+        });
+    }
+
     render () {
         return (
             <div className="pageWrapper">
                 <Nav />
                 <main>
+                    <h1>Play SandalBot</h1>
+                    <div className="horizontalLine"></div>
                     {
                         this.state.settingsConfirmed ? (
-                            <PlayBoard firstMove={this.state.firstMove} />
+                            <PlayBoard firstMove={this.state.firstMove} back={this.back} />
                         ) : (
                             <TimeControls submit={this.submit} />
                         )

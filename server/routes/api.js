@@ -22,28 +22,25 @@ router.get('/download-binary', function(req, res, next) {
 
 router.post('/start-game', function(req, res, next) {
     console.log(req.session);
-    if ('gameId' in req.session) {
-        return res.status(400).json({ message: 'Game already in session' });
+    if (!('gameId' in req.session)) {
+        games[gameIdCounter] = new Game(gameIdCounter);
+        req.session.gameId = gameIdCounter;
+        gameIdCounter++;
     }
-    games[gameIdCounter] = new Game(gameIdCounter);
-    req.session.gameId = gameIdCounter;
-
-    gameIdCounter++;
-
+    
     res.sendStatus(201);
 });
 
 router.post('/start-analysis', function(req, res, next) {
-    console.log(req.session);
-    if ('gameId' in req.session) {
-        return res.status(400).json({ message: 'Game already in session' });
+    if (!('gameId' in req.session)) {
+        games[gameIdCounter] = new Game(gameIdCounter);
+        req.session.gameId = gameIdCounter;
+        games[gameIdCounter].startAnalysis();
+        gameIdCounter++;
+    } else {
+        const id = req.session.gameId;
+        games[id].startAnalysis();
     }
-    games[gameIdCounter] = new Game(gameIdCounter);
-    console.log(games);
-    games[gameIdCounter].startAnalysis();
-    req.session.gameId = gameIdCounter;
-
-    gameIdCounter++;
 
     res.sendStatus(201);
 });
@@ -93,13 +90,17 @@ router.get('/bot-move', function(req, res, next) {
 router.get('/bot-analysis', function(req, res, next) {
     const id = req.session.gameId;
     const game = games[id];
+    const fen = req.query.fen;
 
     if (!game) {
         console.error('Game not Found.');
         res.sendStatus(500);
     }
+    const analysis = game.getAnalysis(fen);
 
-    const analysis = game.getAnalysis();
+    if (analysis === null) {
+        return res.status(201).json({ message: "New FEN string, new analysis started" });
+    }
 
     res.status(200).json({ analysis: analysis });
 });

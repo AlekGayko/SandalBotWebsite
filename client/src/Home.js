@@ -48,7 +48,6 @@ function Home() {
                         <a href="https://github.com/DirtySandals/SandalBotV2"><button>View on GitHub</button></a>
                         <a href="https://lichess.org/@/SandalBot"><button>View on Lichess</button></a>
                     </div>
-
                 </section>
             </main>
             <Footer />

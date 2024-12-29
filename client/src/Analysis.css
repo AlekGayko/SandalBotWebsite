@@ -1,0 +1,165 @@
+main {
+    gap: 1.7rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+
+.analysisInfo {
+    width: 100%;
+    display: flex;
+    gap: 2rem;
+}
+
+.analysisContainer {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.boardContainerAnalysis {
+    padding: 1rem;
+    background-color: var(--secondary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 8px;
+    width: 450px;
+}
+
+.boardContainer p {
+    font-size: 0.8rem;
+}
+
+.eval-pv-container {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    max-height: 2rem;
+    font-size: 1.1rem;
+    gap: 0.75rem;
+    width: 100%;
+    overflow: none;
+}
+
+.eval {
+    display: flex;
+    padding: 0.15rem 0.5rem;
+    font-weight: 600;
+    border-radius: 5px;
+    align-items: center;
+}
+
+.pv {
+    display: flex;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+}
+
+.evalBar {
+    background-color: black;
+    width: 2rem;
+    height: 100%;
+    border-radius: 5px;
+    position: relative;
+}
+
+.evalBar > div {
+    background-color: white;
+    transition: height 0.5s ease-in-out;
+    border-radius: 5px 5px 0 0;
+}
+
+.evalBar > p {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: black;
+}
+
+.fenDisplay > input {
+    padding: 0.2rem 0.5rem;
+}
+
+.fenChanger {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-gap: 0.8rem;
+    width: 100%;
+}
+
+input {
+    color: black;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    padding: 0.1rem 0.5rem;
+    width: 100%;
+}
+
+.sideMenuAnalysis > button, .fenChanger > button {
+    border: none;
+    background-color: var(--secondary-color);
+    padding: 0.2rem 0.5rem;
+    font-weight: 500;
+    border-radius: 5px;
+}
+
+#reset {
+    padding: 0.3rem 0.5rem;
+}
+
+.sideMenuAnalysis {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pieceSelect {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.pieceSelect > div {
+    background-color: var(--secondary-color);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    grid-gap: 0.25rem;
+    border: 0.25rem solid var(--secondary-color);
+    border-radius: 5px;
+}
+
+.pieceSelect button {
+    display: inline-block;
+    border: none;
+    outline: none;
+    background-color: rgb(167, 167, 167);
+    color: var(--secondary-color);
+}
+
+.pieceSelect button:hover {
+    background-color: rgba(231, 231, 231, 0.815);
+}
+
+.pieceSelect img {
+    display: block;
+}
+
+.sideSwitcher {
+    background-color: var(--secondary-color);
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 5px;
+}

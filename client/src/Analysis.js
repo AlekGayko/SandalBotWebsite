@@ -1,15 +1,16 @@
 import React from 'react';
-import Board from './components/Board';
-import './Board.css'
 import Nav from './components/Nav';
 import Footer from './components/Footer';
 import AnalysisBoard from './components/AnalysisBoard';
+import "./Analysis.css";
 
 function Analysis() {
     return (
         <div className="pageWrapper">
             <Nav />
             <main>
+                <h1>Analysis Board</h1>
+                <div className="horizontalLine"></div>
                 <AnalysisBoard />
             </main>
             <Footer />

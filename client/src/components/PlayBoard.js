@@ -6,9 +6,10 @@ import axios from "axios";
 class PlayBoard extends Component {
     constructor(props) {
         super(props);
-
+        
         this.state = {
             game: new Chess(),
+            fen: null,
             moveFrom: "",
             moveTo: null,
             showPromotionDialog: false,
@@ -19,6 +20,10 @@ class PlayBoard extends Component {
             isBotTurn: false,
             moveTime: 500
         }
+
+        this.state.fen = this.state.game.fen();
+
+        this.back = props.back;
     }
 
     // Start game on server
@@ -46,10 +51,21 @@ class PlayBoard extends Component {
         }
     }
 
+    quitGame = async () => {
+        try {
+            axios.delete('/api/quit')
+            .catch(error => {
+                console.error(error);
+            })
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     getBotMove = async () => {
         const endTime = Date.now() + 10000;
         let intervalId;
-        let move = null;
+        
         const fetchMove = async () => { 
             try {
                 const response = await axios.get('/api/bot-move');
@@ -59,14 +75,14 @@ class PlayBoard extends Component {
                     let moveData = response.data.move;
                     console.log(this.state.game.ascii());
                     console.log(this.state.game);
-                    const gameCopy = new Chess(this.state.game.fen());
-                    const move = gameCopy.move({
+
+                    this.state.game.move({
                         from: moveData.slice(0, 2),
                         to: moveData.slice(2, 4),
                         promotion: moveData.length === 5 ? moveData[4] : "q"
                     });
                     this.setState({
-                        game: gameCopy,
+                        fen: this.state.game.fen(),
                         isBotTurn: false
                     });
                     clearInterval(intervalId);
@@ -188,9 +204,7 @@ class PlayBoard extends Component {
             }
 
             // is normal move
-            const gameCopy = new Chess(this.state.game.fen());
-
-            const move = gameCopy.move({
+            const move = this.state.game.move({
                 from: this.state.moveFrom,
                 to: square,
                 promotion: "q"
@@ -207,7 +221,7 @@ class PlayBoard extends Component {
             }
 
             this.setState({
-                game: gameCopy,
+                fen: this.state.game.fen(),
             }, () => {
                 this.generateBotMove();
                 setTimeout(this.state.moveTime * 2);
@@ -239,18 +253,14 @@ class PlayBoard extends Component {
             return false;
         }
         // if no piece passed then user has cancelled dialog, don't make move and reset
-        if (piece) {
-            const gameCopy = {
-                ...this.state.game
-            };
-            
-            gameCopy.move({
+        if (piece) {         
+            this.state.game.move({
                 from: this.state.moveFrom,
                 to: this.state.moveTo,
                 promotion: piece[1].toLowerCase() ?? "q"
             });
             this.setState({
-                game: gameCopy
+                fen: this.state.game.fen()
             }, () => {
                 this.generateBotMove();
                 setTimeout(this.state.moveTime * 2);
@@ -267,14 +277,12 @@ class PlayBoard extends Component {
         return true;
     }
 
-
     render() {
-        const { game, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog, orientation } = this.state;
+        const { game, fen, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog, orientation } = this.state;
         return (
-            <div>
-                <button>Back</button>
-                <div className="boardContainer">
-                    <Chessboard id="ClickToMove" position={game.fen()} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
+            <div className="playContainer">
+                <div className="boardContainerPlay">
+                    <Chessboard id="ClickToMove" position={fen} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
                         borderRadius: "4px",
                         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
                     }} customSquareStyles={{
@@ -282,10 +290,24 @@ class PlayBoard extends Component {
                         ...optionSquares,
                         ...rightClickedSquares
                     }} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+                    <div id="flipContainer">
+                        <button id="flip" onClick={() => {this.setState({ orientation: this.state.orientation === "white" ? "black" : "white"})}}><i className="fa-solid fa-retweet"></i></button>
+                    </div>
                 </div>
-                <button>Resign</button>
-                <button onClick={() => {this.setState({ orientation: this.state.orientation === "white" ? "black" : "white"})}}>Flip Board</button>
-                {/* <button onClick={() => { const gameCopy = new Chess(game.fen());console.log(game); gameCopy.undo(); this.setState({ game: gameCopy })}}>Undo</button> */}
+                <div className="sideMenuPlay">
+                    <button id="back" onClick={() => {this.quitGame(); this.back();}}><i className="fa-solid fa-arrow-left"></i> Back</button>
+                    <div className="moves">
+                        <div className="moveList"></div>
+                        <div className="navButtons">
+                            <button><i className="fa-solid fa-less-than-equal"></i></button>
+                            <button><i className="fa-solid fa-arrow-left"></i></button>
+                            <button><i className="fa-solid fa-arrow-right"></i></button>
+                            <button><i className="fa-solid fa-greater-than-equal"></i></button>
+                        </div>
+                    </div>
+                    <button id="resign"><i className="fa-regular fa-flag"></i> Resign</button>
+                    {/* <button onClick={() => { this.state.game.undo(); this.setState({ fen: this.state.game.fen() })}}>Undo</button> */}
+                </div>
             </div>
         )
     }

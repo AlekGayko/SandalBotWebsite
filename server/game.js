@@ -70,7 +70,11 @@ class Game {
             switch (element) {
                 case "score":
                     if (info[index + 1] === "cp") {
-                        infoObj[element] = info[index + 2];
+                        if (this.gameClient.turn() === "w") {
+                            infoObj[element] = info[index + 2];
+                        } else {
+                            infoObj[element] = String(parseInt(info[index + 2]) * -1);
+                        }
                     } else if (info[index + 1] === "mate") {
                         infoObj[element] = info[index + 1] + info[index + 2];
                     }
@@ -129,8 +133,11 @@ class Game {
     }
 
     generateMove(fen, moveTime=100) {
-        if (this.generatingMove === true || this.isAnalysing === true) {
+        if (this.generatingMove === true) {
             return null;
+        }
+        if (this.isAnalysing) {
+            this.childProcess.stdin.write("stop\r\n");
         }
         if (!moveTime) {
             moveTime = 100;
@@ -159,14 +166,21 @@ class Game {
     }
 
     startAnalysis() {
-        if (this.generatingMove === true || this.isAnalysing === true) {
-            return null;
+        if (this.isAnalysing) {
+            this.childProcess.stdin.write("stop\r\n");
         }
         this.isAnalysing = true;
         this.childProcess.stdin.write(`go\r\n`);
     }
 
-    getAnalysis() {
+    getAnalysis(fen) {
+        if (fen !== this.gameClient.fen() && fen !== null) {
+            this.childProcess.stdin.write("stop\r\n");
+            this.childProcess.stdin.write(`position fen ${fen}\r\n`);
+            this.gameClient = new Chess(fen);
+            this.startAnalysis();
+            return null;
+        }
         return this.currInfo;
     }
 }
