@@ -4,7 +4,7 @@ main {
 }
 
 iframe {
-    max-width: 100%;
+    max-width: 95%;
     width: 400px;
     height: 450px;
     display: block;
@@ -18,6 +18,15 @@ iframe {
 .slick-slider {
     max-width: 900px;
     margin: 0 auto;
+}
+
+.slick-list {
+    max-height: 378px;
+    overflow-y: hidden;
+}
+
+.slick-slide {
+    overflow-x: hidden;
 }
 
 .slick-dots li.slick-active button::before {

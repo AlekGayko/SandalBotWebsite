@@ -111,9 +111,9 @@ main {
 }
 
 .verticalLine {
-    background-color: var(--opposite-color);
-    width: 5px;
-    height: 90%;
+    background-color: var(--third-color);
+    width: 2px;
+    height: 100%;
     border-radius: 2px;
 }
 

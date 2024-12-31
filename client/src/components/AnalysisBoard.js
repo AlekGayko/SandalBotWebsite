@@ -285,7 +285,7 @@ class AnalysisBoard extends Component {
                         <option value="w">White to move</option>
                         <option value="b">Black to move</option>
                     </select>
-                    <button id="reset" onClick={() => {this.state.game.reset(); this.setState({ chessBoardPosition: this.state.game.fen(), side: this.state.game.turn() });}}>Reset</button>
+                    <button id="reset" onClick={() => {this.state.game.reset(); this.updateAnalysis(this.state.game.fen()); this.setState({ chessBoardPosition: this.state.game.fen(), side: this.state.game.turn() });}}>Reset</button>
                     <div className="pieceSelect">
                         <div>
                             {

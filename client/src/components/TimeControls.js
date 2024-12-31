@@ -3,12 +3,8 @@ import React, { Component } from "react";
 class TimeControls extends Component {
     constructor(props) {
         super(props);
-        this.times = Array.from({length : 20}, (v, i) => i + 1);
-        this.increments = [0].concat(Array.from({length : 20}, (v, i) => i + 1));
-        let nextArray1 = Array.from({ length: 5}, (v, i) => i * 5 + 25);
-        let nextArray2 = Array.from({ length: 5}, (v, i) => i * 30 + 60);
-        this.times = [...this.times, ...nextArray1, ...nextArray2];
-        this.increments = [...this.increments, ...nextArray1, ...nextArray2];
+        this.times = Array.from({length : 10}, (v, i) => i + 1);
+        this.increments = [0].concat(Array.from({length : 10}, (v, i) => i + 1));
 
         this.state = {
             time: this.times.findIndex(element => element == 5),

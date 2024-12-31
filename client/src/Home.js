@@ -9,9 +9,9 @@ class Home extends Component {
         super(props);
 
         this.state = {
-            bulletRating: "",
-            blitzRating: "",
-            rapidRating: ""
+            bulletRating: null,
+            blitzRating: null,
+            rapidRating: null
         }
     }
     async componentDidMount() {
@@ -56,11 +56,39 @@ class Home extends Component {
                 <Nav />
                 <main>
                     <section id="elo">
-                        <div><h3>Bullet Rating: </h3><h3>{bulletRating}</h3></div>
-                        <div><h3>Blitz Rating: </h3><h3>{blitzRating}</h3></div>
-                        <div><h3>Rapid Rating: </h3><h3>{rapidRating}</h3></div>
+                        <div>
+                            <h3>Bullet Rating: </h3>
+                            {
+                                bulletRating ? (
+                                    <h3>{bulletRating}</h3>
+                                ) : (
+                                    <div className="loader" style={{height: "1.5rem", width: "1.5rem"}}></div>
+                                )
+                            }
+                        </div>
+                        <div className="verticalLine"></div>
+                        <div>
+                            <h3>Blitz Rating: </h3>
+                            {
+                                blitzRating ? (
+                                    <h3>{blitzRating}</h3>
+                                ) : (
+                                    <div className="loader" style={{height: "1.5rem", width: "1.5rem"}}></div>
+                                )
+                            }
+                        </div>
+                        <div className="verticalLine"></div>
+                        <div>
+                            <h3>Rapid Rating: </h3>
+                            {
+                                rapidRating ? (
+                                    <h3>{rapidRating}</h3>
+                                ) : (
+                                    <div className="loader" style={{height: "1.5rem", width: "1.5rem"}}></div>
+                                )
+                            }
+                        </div>
                     </section>
-                    <div className="horizontalLine"></div>
                     <section className="titleScreen">
                         <div className='title'>
                             <h1>SandalBot</h1>

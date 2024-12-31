@@ -11,7 +11,9 @@ class Play extends Component {
 
         this.state = {
             settingsConfirmed: false,
-            firstMove: null
+            firstMove: null,
+            time: null,
+            increment: null
         }
     }
 
@@ -26,7 +28,9 @@ class Play extends Component {
 
         this.setState({
             settingsConfirmed: true,
-            firstMove: firstMove
+            firstMove: firstMove,
+            time: inputs.time,
+            increment: inputs.increment
         });
     }
 
@@ -37,6 +41,7 @@ class Play extends Component {
     }
 
     render () {
+        const { settingsConfirmed, firstMove, time, increment } = this.state;
         return (
             <div className="pageWrapper">
                 <Nav />
@@ -44,8 +49,8 @@ class Play extends Component {
                     <h1>Play SandalBot</h1>
                     <div className="horizontalLine"></div>
                     {
-                        this.state.settingsConfirmed ? (
-                            <PlayBoard firstMove={this.state.firstMove} back={this.back} />
+                        settingsConfirmed ? (
+                            <PlayBoard firstMove={firstMove} back={this.back} time={time} increment={increment} />
                         ) : (
                             <TimeControls submit={this.submit} />
                         )

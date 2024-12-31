@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import axios from "axios";
+import GameOverDialogue from "./GameOverDialogue";
 
 class PlayBoard extends Component {
     constructor(props) {
@@ -20,7 +21,11 @@ class PlayBoard extends Component {
             isBotTurn: false,
             moves: [],
             moveIndex: 0,
-            moveTime: 500
+            gameOver: false,
+            result: null,
+            whiteTime: props.time * 60,
+            blackTime: props.time * 60,
+            increment: props.increment
         }
 
         this.state.fen = this.state.game.fen();
@@ -39,6 +44,69 @@ class PlayBoard extends Component {
 
     componentDidUpdate() {
         this.scrollToBottom();
+    }
+
+    countDown = () => {
+        if (this.state.gameOver) {
+            return;
+        }
+
+        const { game, whiteTime, blackTime } = this.state;
+        let currentSideTime = game.turn() === "w" ? whiteTime : blackTime;
+
+        if (currentSideTime === 0) {
+            if (!this.state.gameOver) {
+                const winningSide = game.turn() === "b" ? "White" : "Black";
+                const losingSide = winningSide === "White" ? "Black" : "White";
+                const botWon = !this.state.isBotTurn;
+
+                this.quitGame();
+                this.setState({
+                    gameOver: true,
+                    result: {
+                        type: "TimeOut",
+                        winningSide: winningSide,
+                        losingSide: losingSide,
+                        botWon: botWon
+                    }
+                });
+            }
+
+            clearInterval(this.interval);
+            return
+        }
+
+        if (game.turn() === "w") {
+            this.setState({
+                whiteTime: this.state.whiteTime - 1
+            });
+        } else {
+            this.setState({
+                blackTime: this.state.blackTime - 1
+            });
+        }
+    }
+    
+    incrementTime = () => {
+        if (this.state.gameOver) {
+            return;
+        }
+
+        const { increment, whiteTime, blackTime } = this.state;
+
+        if (increment <= 0) {
+            return;
+        }
+
+        if (this.state.game.turn() === "w") {
+            this.setState({
+                whiteTime: whiteTime + increment
+            });
+        } else {
+            this.setState({
+                blackTime: blackTime + increment
+            });
+        }
     }
 
     scrollToBottom = () => {
@@ -73,6 +141,7 @@ class PlayBoard extends Component {
             if (this.props.firstMove === "black") {
                 this.generateBotMove();
             }
+            this.interval = setInterval(this.countDown, 1000);
         }
 
         this.socket.onmessage = (event) => {
@@ -85,23 +154,19 @@ class PlayBoard extends Component {
                         break;
                     case "move":
                         const moveData = jsonMsg.move;
-                        let move = null;
+                        let moveObj = null;
+
                         if (moveData === "O-O" || moveData === "O-O-O") {
-                            move = this.state.game.move(moveData);
+                            moveObj = moveData;
                         } else {
-                            move = this.state.game.move({
-                                from: moveData.slice(0, 2),
+                            moveObj = {
+                                from: moveData.slice(0, 2), 
                                 to: moveData.slice(2, 4),
                                 promotion: moveData.length === 5 ? moveData[4] : "q"
-                            });
+                            };
                         }
-                        console.log(move);
-                        this.state.moves.push(move.san);
-                        this.setState({
-                            fen: this.state.game.fen(),
-                            isBotTurn: false,
-                            moveIndex: this.state.moveIndex + 1
-                        });
+
+                        this.makeMove(moveObj);
                         break;
                 }
             } catch (error) {
@@ -123,7 +188,6 @@ class PlayBoard extends Component {
             const msg = { type: "quit" };
             this.socket.send(JSON.stringify(msg));
             this.socket.close();
-            this.back();
         } catch (error) {
             console.error(error);
         }
@@ -134,18 +198,70 @@ class PlayBoard extends Component {
             this.setState({
                 isBotTurn: true
             });
-
-            this.socket.send(JSON.stringify({ type: "move", move: { from: from, to: to, promotion: promotionType } }));
-            // while (this.prevMsg === null) {
-
-            // }
-            // if (this.prevMsg.type !== "OK") {
-            //     throw new Error("Did not receive OK");
-            // }
-
-            this.socket.send(JSON.stringify({ type: "makeMove", moveTime: this.state.moveTime }));
+            const { whiteTime, blackTime, increment } = this.state;
+            const moveMsg = { type: "move", move: { from: from, to: to, promotion: promotionType } };
+            console.log(moveMsg)
+            this.socket.send(JSON.stringify(moveMsg));
+            const botMoveMsg = { type: "makeMove", times: { wtime: whiteTime * 1000, btime: blackTime * 1000, winc: increment * 1000, binc: increment * 1000 } };
+            this.socket.send(JSON.stringify(botMoveMsg));
         } catch (error) {
             throw error;
+        }
+    }
+
+    makeMove = (moveObj) => {
+        this.incrementTime();
+        let move = null;
+        if (moveObj === "O-O" || moveObj === "O-O-O") {
+            move = this.state.game.move(moveObj);
+        } else {
+            move = this.state.game.move({
+                from: moveObj.from,
+                to: moveObj.to,
+                promotion: moveObj.promotion
+            });
+        }
+        this.logResult();
+        console.log(moveObj)
+        this.state.moves.push(move.san);
+        const makeBotMove = !this.state.isBotTurn;
+        this.setState({
+            fen: this.state.game.fen(),
+            moveIndex: this.state.moveIndex + 1,
+            isBotTurn: !this.state.isBotTurn
+        });
+
+        if (makeBotMove) {
+            this.generateBotMove(moveObj.from, moveObj.to, moveObj.promotion)
+        }
+        return move;
+    }
+
+    logResult = () => {
+        const {game} = this.state;
+        const winningSide = game.turn() === "b" ? "White" : "Black";
+        const losingSide = winningSide === "White" ? "Black" : "White";
+        const botWon = this.state.isBotTurn;
+        let result = null;
+
+        if (game.isCheckmate()) {
+            result = { type: "Checkmate", winningSide: winningSide, losingSide: losingSide, botWon: botWon };
+        } else if (game.isThreefoldRepetition()) {
+            result = { type: "Threefold", winningSide: winningSide, losingSide: losingSide, botWon: botWon };
+        } else if (game.isStalemate()) {
+            result = { type: "Stalemate", winningSide: winningSide, losingSide: losingSide, botWon: botWon };
+        } else if (game.isInsufficientMaterial()) {
+            result = { type: "InsufficientMaterial", winningSide: winningSide, losingSide: losingSide, botWon: botWon };
+        } else if (game.isDraw()) {
+            result = { type: "FiftyMoveRule", winningSide: winningSide, losingSide: losingSide, botWon: botWon };
+        }
+
+        if (result) {
+            this.setState({
+                result: result,
+                gameOver: true
+            });
+            this.quitGame();
         }
     }
 
@@ -188,15 +304,14 @@ class PlayBoard extends Component {
             rightClickedSquares: {}
         });
 
-        if (this.state.game.isGameOver()) {
-            this.quitGame();
+        if (this.state.gameOver) {
             return;
         }
 
         if (this.state.isBotTurn) {
             return;
         }
-        console.log(this.state.moveIndex)
+
         if (this.state.moveIndex > this.state.moves.length) {
             return;
         }
@@ -246,12 +361,12 @@ class PlayBoard extends Component {
                 return;
             }
 
-            // is normal move
-            const move = this.state.game.move({
+            const move = this.makeMove({
                 from: this.state.moveFrom,
                 to: square,
                 promotion: "q"
             });
+
             // if invalid, setMoveFrom and getMoveOptions
             if (move === null) {
                 const hasMoveOptions = this.getMoveOptions(square);
@@ -262,14 +377,6 @@ class PlayBoard extends Component {
                 }
                 return;
             }
-            this.state.moves.push(move.san)
-            this.setState({
-                fen: this.state.game.fen(),
-                moveIndex: this.state.moveIndex + 1
-            });
-
-            this.generateBotMove(this.state.moveFrom, square, "q");
-            setTimeout(this.state.moveTime * 2);
 
             this.setState({
                 moveFrom: "",
@@ -297,20 +404,12 @@ class PlayBoard extends Component {
             return false;
         }
         // if no piece passed then user has cancelled dialog, don't make move and reset
-        if (piece) {         
-            const move = this.state.game.move({
+        if (piece) {    
+            this.makeMove({
                 from: this.state.moveFrom,
                 to: this.state.moveTo,
                 promotion: piece[1].toLowerCase() ?? "q"
             });
-            this.state.moves.push(move.san)
-            this.setState({
-                fen: this.state.game.fen(),
-                moveIndex: this.state.moveIndex + 1
-            });
-
-            this.generateBotMove(this.state.moveFrom, this.state.moveTo, piece[1].toLowerCase() ?? "q");
-            setTimeout(this.state.moveTime * 2);
         }
 
         this.setState({
@@ -362,6 +461,22 @@ class PlayBoard extends Component {
             this.goForward();
         }
     }
+
+    resign = () => {
+        this.quitGame();
+        const winningSide = this.props.firstMove === "black" ? "White" : "Black";
+        const losingSide = winningSide === "White" ? "Black" : "White";
+        const botWon = true;
+        this.setState({
+            gameOver: true,
+            result: { 
+                type: "Resignation", 
+                winningSide: winningSide,
+                losingSide: losingSide,
+                botWon: botWon
+            }
+        });
+    }
     
     render() {
         const { game, fen, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog, orientation } = this.state;
@@ -383,13 +498,19 @@ class PlayBoard extends Component {
         ) : (
             {}
         )
+
+        const whiteTime = Math.floor(this.state.whiteTime / 60) + ":" + (this.state.whiteTime % 60 < 10 ? "0" + this.state.whiteTime % 60 : this.state.whiteTime % 60);
+        const blackTime = Math.floor(this.state.blackTime / 60) + ":" + (this.state.blackTime % 60 < 10 ? "0" + this.state.blackTime % 60 : this.state.blackTime % 60);
+        const whiteTimeStyle = { backgroundColor: this.state.game.turn() === "w" && !this.state.gameOver ? "white" : "grey" };
+        const blackTimeStyle = { backgroundColor: this.state.game.turn() === "b" && !this.state.gameOver ? "black" : "grey" , color: this.state.game.turn() === "b" && !this.state.gameOver ? "white" : "black"};
+
         return (
             <div className="playContainer">
                 <div className="boardContainerPlay">
-                    <Chessboard id="ClickToMove" position={fen} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
-                        borderRadius: "4px",
-                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
-                    }} customSquareStyles={customSquareStyles} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+                    <div className="timer" style={orientation === "white" ? blackTimeStyle : whiteTimeStyle}>{orientation === "white" ? blackTime : whiteTime}</div>
+                    <Chessboard id="ClickToMove" position={fen} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} 
+                    customSquareStyles={customSquareStyles} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+                    <div className="timer" style={orientation === "black" ? blackTimeStyle : whiteTimeStyle}>{orientation === "black" ? blackTime : whiteTime}</div>
                     <div id="flipContainer">
                         <button id="flip" onClick={() => {this.setState({ orientation: this.state.orientation === "white" ? "black" : "white"})}}><i className="fa-solid fa-retweet"></i></button>
                     </div>
@@ -420,7 +541,14 @@ class PlayBoard extends Component {
                             <button onClick={this.goToEnd}><i className="fa-solid fa-greater-than-equal"></i></button>
                         </div>
                     </div>
-                    <button id="resign" onClick={this.quitGame}><i className="fa-regular fa-flag"></i> Resign</button>
+                    {
+                        !this.state.result ? (
+                            <button id="resign" onClick={this.resign}><i className="fa-regular fa-flag"></i> Resign</button>
+                        ) : (
+                            ''
+                        )
+                    }
+                    <GameOverDialogue result={this.state.result} />
                 </div>
             </div>
         )

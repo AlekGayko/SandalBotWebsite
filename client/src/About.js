@@ -183,7 +183,7 @@ function About() {
                 <section id="hashtable" className="enginepart">
                     <h1>Transposition Table</h1>
                     <div className="partcontainer">
-                        <div>
+                        <div className="paragraph">
                             <p>
                                 SandalBot employs a transposition table to enhance its efficiency and accuracy in evaluating chess positions. This table is essentially a cache that 
                                 stores the results of previously evaluated positions, allowing the engine to recognize and reuse these results when the same positions are encountered again, 

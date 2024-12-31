@@ -9,8 +9,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const MAX_GAMES = 10;
+const CLEANUP_INTERVAL = 60000; // 1 minute
 
 var games = {};
+
+const cleanUpGames = () => {
+    const keys = Object.keys(games);
+    let gamesDeleted = 0;
+    keys.forEach(key => {
+        if (games[key].inactive) {
+            delete games[key];
+            gamesDeleted++;
+        }
+    });
+
+    console.log('Games Deleted', gamesDeleted);
+};
+
+setInterval(cleanUpGames, CLEANUP_INTERVAL);
 
 const quitGame = (id) => {
     const game = games[id];

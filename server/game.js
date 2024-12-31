@@ -181,7 +181,7 @@ class Engine {
         console.log(this.moveList)
     }
 
-    async generateMove(moveTime=100) {
+    async generateMove(times) {
         this.stopAnalysis();
         if (this.state !== EngineState.IDLE) {
             this.resetProcess();
@@ -192,7 +192,8 @@ class Engine {
         const positionCommand = `position startpos moves ${this.moveList}\r\n`;
         this.childProcess.stdin.write(positionCommand);
 
-        let moveCommand = `go movetime ${moveTime}\r\n`;
+        let moveCommand = `go wtime ${times.wtime} btime ${times.btime} winc ${times.winc} binc ${times.binc}\r\n`;
+        console.log(moveCommand)
         this.childProcess.stdin.write(moveCommand);
     }
 
@@ -238,8 +239,7 @@ class Game {
             console.log(`Game Server listening on port ${this.port}`);
         });
         this.engine = new Engine(this.wss);
-        
-        
+        this.inactive = false;
     }
 
     delete() {
@@ -258,6 +258,7 @@ class Game {
                     console.log("Timed Out");
                     ws.close();
                     this.engine.killProcess();
+                    this.inactive = true;
                 }, TIMEOUT_DURATION);
             };
 
@@ -266,6 +267,7 @@ class Game {
             const okMsg = JSON.stringify({ type: "OK" });
 
             ws.on('message', (message) => {
+                this.inactive = false;
                 try {
                     resetTimer();
                     const jsonMsg = JSON.parse(message);
@@ -280,7 +282,7 @@ class Game {
                             ws.send(okMsg);
                             break;
                         case "makeMove":
-                            this.engine.generateMove(jsonMsg.moveTime);
+                            this.engine.generateMove(jsonMsg.times);
                             ws.send(okMsg);
                             break;
                         case "analysis":

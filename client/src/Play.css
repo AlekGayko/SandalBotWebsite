@@ -1,9 +1,25 @@
 .boardContainerPlay {
     position: relative;
     width: 500px;
-    padding: 1.5rem;
+    padding: 0.9rem 2rem;
     border-radius: 8px;
-    background-color: var(--secondary-color); 
+    background-color: rgb(41, 41, 41); 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+
+.timer {
+    font-weight: 600;
+    font-size: 1.2rem;
+    padding: 0.1rem 0.4rem;
+    background-color: var(--opposite-color);
+    border-radius: 4px;
+    color: var(--secondary-color);
+    display: block;
 }
 
 form * {
@@ -25,6 +41,11 @@ form > div {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+form > div > input[type=range] {
+    padding: 0;
+    background-color: transparent;
 }
 
 .sideSelect {
@@ -97,8 +118,8 @@ form button {
 
 #flip {
     position: absolute;
-    right: 1%;
-    top: 4.5%;
+    right: 1.75%;
+    top: 9.5%;
     background-color: transparent;
     border: none;
     outline: none;
@@ -160,4 +181,13 @@ form button {
     outline: 3px solid black;
     height: 30px;
     width: 100%;
+}
+
+.endDialogue {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    font-weight: 500;
+    text-align: center;
 }

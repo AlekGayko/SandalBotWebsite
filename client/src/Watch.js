@@ -10,7 +10,7 @@ function Watch() {
             <Nav />
             <main>
                 <h2>Current Games</h2>
-                <LichessGames finished={false} maxGames={3}/>
+                <LichessGames finished={false} maxGames={5}/>
                 <div className="horizontalLine"></div>
                 <h2>Most Recent Games</h2>
                 <LichessGames finished={true} maxGames={9} />
