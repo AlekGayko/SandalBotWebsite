@@ -1,25 +1,53 @@
 import { spawn } from 'node:child_process';
 import { Chess } from "chess.js";
+import http from "http";
+import { WebSocketServer } from "ws";
+import dotenv from "dotenv";
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { FenParser } from "@chess-fu/fen-parser";
 
-// Game class abstracts the chess engine process and state
-class Game {
-    constructor(id) {
-        this.id = id;
-        this.exePath = process.env.ENGINE;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: resolve(__dirname, '../.env' )});
+
+const exePath = process.env.ENGINE;
+const TIMEOUT_DURATION = 600000; // 10 minutes
+
+const EngineState = {
+    IDLE: 0,
+    GENERATING_MOVE: 1,
+    ANALYSING: 2
+};
+
+class Engine {
+    constructor(wss) {
         this.childProcess = null;
         this.prevInfo = {};
         this.prevBestMove = "";
+        this.moveList = "";
         this.currInfo = {};
-        this.generatingMove = false;
-        this.isAnalysing = false;
+        this.state = EngineState.IDLE;
         this.gameClient = new Chess();
+        this.wss = wss;
 
         this.startProcess();
     }
 
+    sendMessage(jsonMsg) {
+        const msg = JSON.stringify(jsonMsg);
+        this.wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(msg);
+            }
+        });
+    }
+
     // Start chess engine process
     startProcess() {
-        this.childProcess = spawn(this.exePath);
+        console.log(exePath)
+        this.childProcess = spawn(exePath);
 
         this.childProcess.stdout.on('data', (data) => {
             let res = data.toString();
@@ -30,11 +58,31 @@ class Game {
             } else if (res[0] === "info") {
                 const info = this.processInfo(res);
                 this.currInfo = info;
+                if (this.state === EngineState.ANALYSING) {
+                    const msg = { type: "analysis", info: this.currInfo }
+                    this.sendMessage(msg);
+                }
             } else if (res[0] === "bestmove") {
                 this.prevInfo = this.currInfo;
                 this.currInfo = {};
                 this.prevBestMove = res[1];
-                this.generatingMove = false;
+                this.moveList += this.prevBestMove + " ";
+
+                if (this.prevBestMove === "O-O" || this.prevBestMove === "O-O-O") {
+                    this.gameClient.move(this.prevBestMove);
+                } else {
+                    this.gameClient.move({
+                        from: this.prevBestMove.slice(0, 2),
+                        to: this.prevBestMove.slice(2, 4),
+                        promotion: this.prevBestMove.length === 5 ? this.prevBestMove[4] : "q"
+                    });
+                }
+
+                if (this.state === EngineState.GENERATING_MOVE) {
+                    this.state = EngineState.IDLE;
+                    const msg = { type: "move", move: this.prevBestMove };
+                    this.sendMessage(msg);
+                }
             }
         });
 
@@ -55,10 +103,9 @@ class Game {
 
     // Kill the chess engine process
     killProcess() {
-        if (this.isAnalysing === true) {
-            this.childProcess.stdin.write('stop\r\n');
+        if (this.childProcess) {
+            this.childProcess.kill();
         }
-        this.childProcess.stdin.write('quit\n');
     }
 
     processInfo(info) {
@@ -116,72 +163,153 @@ class Game {
     }
 
     // Receive move and make move on game client and the chess engine
-    inputMove(fenStr, moveObj) {
-        if (this.generatingMove === true || this.isAnalysing === true) {
+    inputMove(moveObj) {
+        if (this.state !== EngineState.IDLE) {
             return null;
         }
+        this.resetInfo();
 
-        this.gameClient = new Chess(fenStr);
+        console.log(moveObj)
         const move = this.gameClient.move({
             from: moveObj.from,
             to: moveObj.to,
             promotion: moveObj.promotion
-        });
+        }); 
+        console.log(move)
+        this.moveList += moveObj.from + moveObj.to + moveObj.promotion + " ";
 
-        const positionCommand = `position fen ${fenStr} moves ${move.lan}\r\n`;
-        this.childProcess.stdin.write(positionCommand);
+        console.log(this.moveList)
     }
 
-    generateMove(fen, moveTime=100) {
-        if (this.generatingMove === true) {
-            return null;
-        }
-        if (this.isAnalysing) {
-            this.childProcess.stdin.write("stop\r\n");
-        }
-        if (!moveTime) {
-            moveTime = 100;
+    async generateMove(moveTime=100) {
+        this.stopAnalysis();
+        if (this.state !== EngineState.IDLE) {
+            this.resetProcess();
         }
 
-        this.generatingMove = true;
+        this.state = EngineState.GENERATING_MOVE;
 
-        const positionCommand = `position fen ${fen}\r\n`;
+        const positionCommand = `position startpos moves ${this.moveList}\r\n`;
         this.childProcess.stdin.write(positionCommand);
 
         let moveCommand = `go movetime ${moveTime}\r\n`;
         this.childProcess.stdin.write(moveCommand);
     }
 
-    // Get move made by engine`
-    getMove() {
-        if (this.generatingMove === true || this.isAnalysing === true) {
-            return null;
+    stopAnalysis() {
+        if (this.state !== EngineState.ANALYSING) {
+            return;
         }
-
-        if (this.prevBestMove === "") {
-            return null;
-        }
-
-        return this.prevBestMove;
+        this.childProcess.stdin.write("stop\r\n");
+        this.state = EngineState.IDLE;
     }
 
-    startAnalysis() {
-        if (this.isAnalysing) {
-            this.childProcess.stdin.write("stop\r\n");
+    resetInfo() {
+        this.currInfo = {};
+        this.prevInfo = {};
+        this.prevBestMove = "";
+    }
+
+    resetProcess() {
+        console.log("Resetting Process.");
+        this.childProcess.kill();
+        this.childProcess = spawn(exePath);
+    }
+
+    startAnalysis(fen) {
+        this.stopAnalysis();
+        if (this.state !== EngineState.IDLE) {
+            this.resetProcess();
         }
-        this.isAnalysing = true;
+        this.state = EngineState.ANALYSING;
+        this.childProcess.stdin.write(`position fen ${fen}\r\n`);
         this.childProcess.stdin.write(`go\r\n`);
     }
+}
 
-    getAnalysis(fen) {
-        if (fen !== this.gameClient.fen() && fen !== null) {
-            this.childProcess.stdin.write("stop\r\n");
-            this.childProcess.stdin.write(`position fen ${fen}\r\n`);
-            this.gameClient = new Chess(fen);
-            this.startAnalysis();
-            return null;
-        }
-        return this.currInfo;
+// Game class abstracts the chess engine process and state
+class Game {
+    constructor(port) {
+        this.port = port;
+        this.gameServer = http.createServer();
+        this.wss = new WebSocketServer({ server: this.gameServer });
+        this.defineWssHandlers();
+        this.gameServer.listen(this.port, () => {
+            console.log(`Game Server listening on port ${this.port}`);
+        });
+        this.engine = new Engine(this.wss);
+        
+        
+    }
+
+    delete() {
+        this.wss.close();
+        this.engine.killProcess();
+    }
+
+    defineWssHandlers() {
+        this.wss.on('connection', (ws) => {
+            console.log("Socket Opened");
+            let timeoutId;
+
+            const resetTimer = () => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    console.log("Timed Out");
+                    ws.close();
+                    this.engine.killProcess();
+                }, TIMEOUT_DURATION);
+            };
+
+            resetTimer();
+
+            const okMsg = JSON.stringify({ type: "OK" });
+
+            ws.on('message', (message) => {
+                try {
+                    resetTimer();
+                    const jsonMsg = JSON.parse(message);
+                    console.log(jsonMsg)
+                    switch (jsonMsg.type) {
+                        case "ping":
+                            const msg = { type: "ping", state: this.engine.state };
+                            ws.send(msg);
+                            break;
+                        case "move":
+                            this.engine.inputMove(jsonMsg.move);
+                            ws.send(okMsg);
+                            break;
+                        case "makeMove":
+                            this.engine.generateMove(jsonMsg.moveTime);
+                            ws.send(okMsg);
+                            break;
+                        case "analysis":
+                            const fen = new FenParser(jsonMsg.fen);
+                            if (!fen.isValid) {
+                                return;
+                            }
+                            this.engine.startAnalysis(jsonMsg.fen);
+                            ws.send(okMsg);
+                            break;
+                        case "quit":
+                            ws.close();
+                            break;
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            });
+
+            ws.on('close', () => {
+                clearTimeout(timeoutId);
+                this.engine.killProcess();
+            });
+    
+            ws.on('error', (error) => {
+                clearTimeout(timeoutId);
+                this.engine.killProcess();
+            });
+        });        
     }
 }
 

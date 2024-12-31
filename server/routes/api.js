@@ -3,12 +3,52 @@ const router = express.Router();
 import Game from './../game.js';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import net from "net";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-var gameIdCounter = 1;
+const MAX_GAMES = 10;
+
 var games = {};
+
+const quitGame = (id) => {
+    const game = games[id];
+
+    if (!game) {
+        console.error('Game not Found.');
+        res.sendStatus(500);
+    }
+
+    game.delete();
+
+    delete games[id];
+}
+
+const BASE_PORT = 5000;
+var currentPort = BASE_PORT;
+
+const findNextAvailablePort = () => {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                // Port is in use, try next one
+                currentPort++;
+                resolve(findNextAvailablePort());
+            } else {
+                reject(err);
+            }
+        });
+
+        server.once('listening', () => {
+            server.close();
+            resolve(currentPort);
+        });
+
+        server.listen(currentPort);
+    });
+};
 
 router.get('/download-binary', function(req, res, next) {
     const filePath = path.join(__dirname, './../engines/', 'SandalBotV2.exe');
@@ -20,112 +60,21 @@ router.get('/download-binary', function(req, res, next) {
     });
 });
 
-router.post('/start-game', function(req, res, next) {
-    console.log(req.session);
-    if (!('gameId' in req.session)) {
-        games[gameIdCounter] = new Game(gameIdCounter);
-        req.session.gameId = gameIdCounter;
-        gameIdCounter++;
-    }
-    
-    res.sendStatus(201);
-});
-
-router.post('/start-analysis', function(req, res, next) {
-    if (!('gameId' in req.session)) {
-        games[gameIdCounter] = new Game(gameIdCounter);
-        req.session.gameId = gameIdCounter;
-        games[gameIdCounter].startAnalysis();
-        gameIdCounter++;
-    } else {
-        const id = req.session.gameId;
-        games[id].startAnalysis();
-    }
-
-    res.sendStatus(201);
-});
-
-router.use(function(req, res, next) {
-    if ('gameId' in req.session) {
-        next();
-    } else {
-        res.sendStatus(401);
-    }
-});
-
-router.post('/generate-move', function(req, res, next) {
-    const id = req.session.gameId;
-    const fen = req.body.fen;
-    const moveTime = req.body.moveTime;
-    const game = games[id];
-
-    if (!game) {
-        console.error('Game not Found.');
-        res.sendStatus(500);
-    }
-
-    game.generateMove(fen, moveTime);
-
-    res.sendStatus(200);
-});
-
-router.get('/bot-move', function(req, res, next) {
-    const id = req.session.gameId;
-    const game = games[id];
-
-    if (!game) {
-        console.error('Game not Found.');
-        res.sendStatus(500);
-    }
-
-    const botMove = game.getMove();
-
-    if (botMove) {
-        res.status(200).json({ move: botMove });
-    } else {
-        res.status(202).json({ message: 'Move still being generated' });
-    }
-});
-
-router.get('/bot-analysis', function(req, res, next) {
-    const id = req.session.gameId;
-    const game = games[id];
-    const fen = req.query.fen;
-
-    if (!game) {
-        console.error('Game not Found.');
-        res.sendStatus(500);
-    }
-    const analysis = game.getAnalysis(fen);
-
-    if (analysis === null) {
-        return res.status(201).json({ message: "New FEN string, new analysis started" });
-    }
-
-    res.status(200).json({ analysis: analysis });
-});
-
-router.delete('/quit', function(req, res, next) {
-    console.log(games);
-    const id = req.session.gameId;
-    const game = games[id];
-
-    if (!game) {
-        console.error('Game not Found.');
-        res.sendStatus(500);
-    }
-
-    game.killProcess();
-
-    delete games[id];
-
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).send("Error Deleting Session");
+router.get('/start-session', async function(req, res, next) {
+    const id = req.session.id;
+    try {
+        if (id in games) {
+            quitGame(id);
         }
-    });
-    res.clearCookie('connect.sid');
-    res.status(204).send("Session has been destroyed");
+        if (Object.keys(games).length >= MAX_GAMES) {
+            return res.status(503);
+        }
+        const port = await findNextAvailablePort();
+        games[id] = new Game(port);
+        res.status(201).json({ url: "ws://localhost:" + String(port) });
+    } catch (error) {
+        console.error(error);
+    }
 });
 
 export default router;

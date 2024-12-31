@@ -40,28 +40,25 @@ class TimeControls extends Component {
         const { time, increment, side } = this.state;
 
         return (
-            <>
-                <h2>Create A Game</h2>
-                <form onSubmit={this.submit}>
-                    <div>
-                        <label htmlFor="time">Minutes per side: {this.times[time]}</label>
-                        <input type="range" name="time" value={time} min={0} max={this.times.length - 1} onChange={this.changeHandler} />
-                    </div>
-                    <div>
-                        <label htmlFor="increment">Increment in seconds: {this.increments[increment]}</label>
-                        <input type="range" name="increment" value={increment} min={0} max={this.increments.length - 1} onChange={this.changeHandler} />
-                    </div>
-                    <div className="sideSelect">
-                        <button type="submit" onClick={this.sideHandler}><i className="fa-solid fa-chess-king blackKing" id="black"></i></button>
-                        <button type="submit" onClick={this.sideHandler}>
-                            <i className="fa-solid fa-chess-king blackKing"></i>
-                            /
-                            <i className="fa-regular fa-chess-king whiteKing"></i>
-                        </button>
-                        <button type="submit" onClick={this.sideHandler}><i className="fa-regular fa-chess-king whiteKing" id="white"></i></button>
-                    </div>
-                </form>
-            </>
+            <form onSubmit={this.submit}>
+                <div>
+                    <label htmlFor="time">Minutes per side: {this.times[time]}</label>
+                    <input type="range" name="time" value={time} min={0} max={this.times.length - 1} onChange={this.changeHandler} />
+                </div>
+                <div>
+                    <label htmlFor="increment">Increment in seconds: {this.increments[increment]}</label>
+                    <input type="range" name="increment" value={increment} min={0} max={this.increments.length - 1} onChange={this.changeHandler} />
+                </div>
+                <div className="sideSelect">
+                    <button type="submit" onClick={this.sideHandler}><i className="fa-solid fa-chess-king blackKing" id="black"></i></button>
+                    <button type="submit" onClick={this.sideHandler}>
+                        <i className="fa-solid fa-chess-king blackKing"></i>
+                        /
+                        <i className="fa-regular fa-chess-king whiteKing"></i>
+                    </button>
+                    <button type="submit" onClick={this.sideHandler}><i className="fa-regular fa-chess-king whiteKing" id="white"></i></button>
+                </div>
+            </form>
         )
     }
 }

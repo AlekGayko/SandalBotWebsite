@@ -38,6 +38,15 @@ const __dirname = dirname(__filename);
 
 app.use(express.static(path.join(__dirname, '../client/build')));
 
+var idCounter = 0;
+
+app.use((req, res, next) => {
+  if (!('id' in req.session)) {
+    req.session.id = idCounter++;
+  }
+  next();
+});
+
 app.use('/api', apiRouter);
 
 app.get('*', function(req, res, next) {

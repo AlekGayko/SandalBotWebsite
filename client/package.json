@@ -18,7 +18,8 @@
     "react-scripts": "5.0.1",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
-    "web-vitals": "^4.2.4"
+    "web-vitals": "^4.2.4",
+    "ws": "^8.18.0"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -19,70 +19,111 @@ class AnalysisBoard extends Component {
 
         this.state.chessBoardPosition = this.state.game.fen();
         this.state.fenInput = this.state.chessBoardPosition;
+
+        this.socketUrl = null;
+        this.socket = null;
+        this.socketOpen = false;
     }
 
     async componentDidMount() {
-        const initIntervalTime = 500;
-        let intervalTime = initIntervalTime;
-        let fen;
-        let intervalId;
+        await this.startSession();
+    }
 
-        const startAnalysis = async () => {
+    startSession = async () => {
+        try {
+            let response = await axios.get('/api/start-session')
+            .then(response => {
+                console.log(response);
+                this.socketUrl = response.data.url;    
+                this.openSocket();      
+            })
+            .catch(error => {
+                console.log(error);
+            });
+        } catch (err) {
+            console.error(err);
+            throw new Error();
+        }
+    }
+
+    openSocket = async () => {
+        this.socket = new WebSocket(this.socketUrl);
+
+        this.socket.onopen = () => {
+            console.log('Socket Connected.');
+            this.socketOpen = true;
+            this.updateAnalysis(this.state.chessBoardPosition);
+        }
+
+        this.socket.onmessage = (event) => {
             try {
-                let response = await axios.post('/api/start-analysis');
+                const jsonMsg = JSON.parse(event.data);
 
-                if (response.status === 201 || response.status === 400) {
-                    this.getAnalysis();
-                    clearInterval(intervalId);
-                } else {
-                    console.error(response);
+                console.log('Message Received', jsonMsg);
+
+                switch (jsonMsg.type) {
+                    case "ping":
+                        break;
+                    case "analysis":
+                        const analysis = jsonMsg.info;
+
+                        this.setState({
+                            analysis: analysis
+                        });
+                        break;
                 }
             } catch (error) {
                 console.error(error);
             }
         }
 
-        intervalId = setInterval(() => {
-            startAnalysis();
-        }, intervalTime);
+        this.socket.onerror = (error) => {
+            console.error(error);
+        }
+
+        this.socket.onclose = () => {
+            console.error('Socket Closed.')
+        }
     }
 
-    getAnalysis = async () => {
-        const initIntervalTime = 500;
-        let intervalTime = initIntervalTime;
-        let fen;
-        let intervalId;
-        
-        const fetchMove = async () => { 
-            try {
-                const response = await axios.get('/api/bot-analysis', { 
-                    params: { 
-                        fen: fen 
-                    }
+    transformPv = (pv) => {
+        if (!pv) {
+            return "";
+        }
+        let newPv = pv;
+        newPv = newPv.trim().split(" ");
+        console.log(newPv)
+        const chess = new Chess(this.state.chessBoardPosition);
+        let transformedPV = "";
+        newPv.forEach(element => {
+            let move = null;
+            if (element === "O-O" || element === "O-O-O") {
+                move = chess.move(element);
+            } else {
+                move = chess.move({
+                    from: element.slice(0, 2),
+                    to: element.slice(2, 4),
+                    promotion: element.length === 5 ? element[4] : "q"
                 });
-                
-                if (response.status === 200) {
-                    if (response.data.analysis === this.state.analysis) {
-                        intervalTime = intervalTime * 1.25;
-                        console.log(intervalTime);
-                    } else {
-                        intervalTime = initIntervalTime;
-                    }
-                    this.setState({
-                        analysis: response.data.analysis
-                    });
-                } else if (response.status === 201) {
-                    console.log(`${response.data.message}`);
-                }
-            } catch (err) {
-                console.log(err);
             }
-        };
 
-        intervalId = setInterval(() => {
-            fen = this.state.chessBoardPosition;
-            fetchMove();
-        }, intervalTime);
+            transformedPV += move.san + " ";
+        });
+        transformedPV = transformedPV.trim();
+
+        return transformedPV;
+    }
+
+    updateAnalysis = async (fen) => {
+        try {
+            this.setState({
+                analysis: {}
+            });
+            const msg = JSON.stringify({ type: "analysis", fen: fen });
+            this.socket.send(msg);
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     onDrop = (sourceSquare, targetSquare, piece) => {
@@ -93,6 +134,8 @@ class AnalysisBoard extends Component {
             this.setState({
                 chessBoardPosition: this.state.game.fen()
             });
+
+            this.updateAnalysis(this.state.game.fen());
 
             return true;
         } catch (error) {
@@ -114,6 +157,8 @@ class AnalysisBoard extends Component {
                 chessBoardPosition: this.state.game.fen(),
                 selectedSidePiece: { color: "", type: "", str: "--"}
             });
+
+            this.updateAnalysis(this.state.game.fen());
         } catch (error) {
             console.error(error);
             return;
@@ -167,11 +212,23 @@ class AnalysisBoard extends Component {
             fenInput: '', 
             side: fen.turn 
         });
+
+        this.updateAnalysis(this.state.fenInput);
     }
 
     render() {
         const { chessBoardPosition, analysis } = this.state;
-        const bestMove = this.state.analysis.pv?.split(" ")?.[0];
+        let bestMove = this.state.analysis.pv?.split(" ")?.[0];
+        if (bestMove) {
+            try {
+                const chess = new Chess(chessBoardPosition);
+                const move = chess.move(bestMove);
+                bestMove = move.lan;
+            } catch (error) {
+                bestMove = null;
+            }
+        }
+        
         const noData = Object.keys(this.state.analysis).length === 0;
         let evaluation = "-";
         const colorChars = ["l", "d"];
@@ -186,11 +243,11 @@ class AnalysisBoard extends Component {
         }
 
         let evalBarStyle = {};
-        let evalHeight = 50 + Math.min(50, Math.abs(0.2 * evaluation ** 3)) * Math.sign(evaluation);
+        let evalHeight = 50 + Math.min(45, Math.abs(0.2 * evaluation ** 3)) * Math.sign(evaluation);
         if (evaluation[0] === "M") {
-            const whiteWinning = !(this.state.game.turn() === "w" ^ analysis.pv.trim().split(" ").length % 2 === 1);
-            evalHeight = whiteWinning ? "100" : "0";
+            const whiteWinning = parseInt(analysis.score.trim().split(" ")[1]) >= 0 ^ this.state.game.turn() === "b";
             evalBarStyle = { color: whiteWinning ? "black" : "white", top: whiteWinning ? "2.5%" : "97.5%" };
+            evalHeight = whiteWinning ? 100 : 0;
         } else {
             evalBarStyle = { color: evaluation >= 0 ? "black" : "white", top: evaluation >= 0 ? "2.5%" : "97.5%" };
         }

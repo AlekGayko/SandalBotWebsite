@@ -18,100 +18,134 @@ class PlayBoard extends Component {
             optionSquares: {},
             orientation: this.props.firstMove,
             isBotTurn: false,
+            moves: [],
+            moveIndex: 0,
             moveTime: 500
         }
 
         this.state.fen = this.state.game.fen();
 
         this.back = props.back;
+        this.socketUrl = null;
+        this.socket = null;
+        this.socketOpen = false;
+        this.movesRef = React.createRef();
     }
 
     // Start game on server
-    async componentDidMount() {
-        await this.startGame();
+    componentDidMount() {
+        this.startSession();
+    }
 
-        if (this.props.firstMove === "black") {
-            await this.generateBotMove();
+    componentDidUpdate() {
+        this.scrollToBottom();
+    }
 
+    scrollToBottom = () => {
+        if (this.movesRef.current) {
+            this.movesRef.current.scrollTop = this.movesRef.current.scrollHeight;
         }
     }
 
-    startGame = async () => {
+    startSession = async () => {
         try {
-            let response = await axios.post('/api/start-game')
+            let response = await axios.get('/api/start-session')
             .then(response => {
-                console.log(response);            
+                console.log(response);
+                this.socketUrl = response.data.url;    
+                this.openSocket();      
             })
             .catch(error => {
                 console.log(error);
             });
         } catch (err) {
             console.error(err);
-            throw err;
+            throw new Error();
+        }
+    }
+
+    openSocket = async () => {
+        this.socket = new WebSocket(this.socketUrl);
+
+        this.socket.onopen = () => {
+            console.log('Socket Connected.');
+            this.socketOpen = true;
+            if (this.props.firstMove === "black") {
+                this.generateBotMove();
+            }
+        }
+
+        this.socket.onmessage = (event) => {
+            try {
+                const jsonMsg = JSON.parse(event.data);
+                console.log('Message Received', jsonMsg);
+
+                switch (jsonMsg.type) {
+                    case "ping":
+                        break;
+                    case "move":
+                        const moveData = jsonMsg.move;
+                        let move = null;
+                        if (moveData === "O-O" || moveData === "O-O-O") {
+                            move = this.state.game.move(moveData);
+                        } else {
+                            move = this.state.game.move({
+                                from: moveData.slice(0, 2),
+                                to: moveData.slice(2, 4),
+                                promotion: moveData.length === 5 ? moveData[4] : "q"
+                            });
+                        }
+                        console.log(move);
+                        this.state.moves.push(move.san);
+                        this.setState({
+                            fen: this.state.game.fen(),
+                            isBotTurn: false,
+                            moveIndex: this.state.moveIndex + 1
+                        });
+                        break;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        this.socket.onerror = (error) => {
+            console.error(error);
+        }
+
+        this.socket.onclose = () => {
+            console.error('Socket Closed.')
         }
     }
 
     quitGame = async () => {
         try {
-            axios.delete('/api/quit')
-            .catch(error => {
-                console.error(error);
-            })
+            const msg = { type: "quit" };
+            this.socket.send(JSON.stringify(msg));
+            this.socket.close();
+            this.back();
         } catch (error) {
             console.error(error);
         }
     }
 
-    getBotMove = async () => {
-        const endTime = Date.now() + 10000;
-        let intervalId;
-        
-        const fetchMove = async () => { 
-            try {
-                const response = await axios.get('/api/bot-move');
-                console.log(response);
-                if (response.status === 200) {
-                    console.log(`move: ${response.data.move}`);
-                    let moveData = response.data.move;
-                    console.log(this.state.game.ascii());
-                    console.log(this.state.game);
-
-                    this.state.game.move({
-                        from: moveData.slice(0, 2),
-                        to: moveData.slice(2, 4),
-                        promotion: moveData.length === 5 ? moveData[4] : "q"
-                    });
-                    this.setState({
-                        fen: this.state.game.fen(),
-                        isBotTurn: false
-                    });
-                    clearInterval(intervalId);
-                } else if (response.status === 202) {
-                    console.log(`${response.data.message}`);
-                }
-            } catch (err) {
-                console.log(err);
-            }
-        };
-
-        intervalId = setInterval(() => {
-            if (Date.now() >= endTime) {
-                clearInterval(this.intervalId);
-            } else {
-                fetchMove();
-            }
-        }, this.state.moveTime * 2);
-    }
-
-    generateBotMove = async () => {
-        this.setState({
-            isBotTurn: true
-        });
+    generateBotMove = async (from, to, promotionType) => {
         try {
-            let response = await axios.post('/api/generate-move', { fen: this.state.game.fen(), moveTime: this.state.moveTime })
-            await this.getBotMove();
-        } catch (err) {
-            console.error(err);
+            this.setState({
+                isBotTurn: true
+            });
+
+            this.socket.send(JSON.stringify({ type: "move", move: { from: from, to: to, promotion: promotionType } }));
+            // while (this.prevMsg === null) {
+
+            // }
+            // if (this.prevMsg.type !== "OK") {
+            //     throw new Error("Did not receive OK");
+            // }
+
+            this.socket.send(JSON.stringify({ type: "makeMove", moveTime: this.state.moveTime }));
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -154,7 +188,16 @@ class PlayBoard extends Component {
             rightClickedSquares: {}
         });
 
+        if (this.state.game.isGameOver()) {
+            this.quitGame();
+            return;
+        }
+
         if (this.state.isBotTurn) {
+            return;
+        }
+        console.log(this.state.moveIndex)
+        if (this.state.moveIndex > this.state.moves.length) {
             return;
         }
 
@@ -219,13 +262,14 @@ class PlayBoard extends Component {
                 }
                 return;
             }
-
+            this.state.moves.push(move.san)
             this.setState({
                 fen: this.state.game.fen(),
-            }, () => {
-                this.generateBotMove();
-                setTimeout(this.state.moveTime * 2);
+                moveIndex: this.state.moveIndex + 1
             });
+
+            this.generateBotMove(this.state.moveFrom, square, "q");
+            setTimeout(this.state.moveTime * 2);
 
             this.setState({
                 moveFrom: "",
@@ -254,17 +298,19 @@ class PlayBoard extends Component {
         }
         // if no piece passed then user has cancelled dialog, don't make move and reset
         if (piece) {         
-            this.state.game.move({
+            const move = this.state.game.move({
                 from: this.state.moveFrom,
                 to: this.state.moveTo,
                 promotion: piece[1].toLowerCase() ?? "q"
             });
+            this.state.moves.push(move.san)
             this.setState({
-                fen: this.state.game.fen()
-            }, () => {
-                this.generateBotMove();
-                setTimeout(this.state.moveTime * 2);
+                fen: this.state.game.fen(),
+                moveIndex: this.state.moveIndex + 1
             });
+
+            this.generateBotMove(this.state.moveFrom, this.state.moveTo, piece[1].toLowerCase() ?? "q");
+            setTimeout(this.state.moveTime * 2);
         }
 
         this.setState({
@@ -277,19 +323,73 @@ class PlayBoard extends Component {
         return true;
     }
 
+    goBack = () => {
+        const { moveIndex, isBotTurn } = this.state;
+        this.state.game.undo();        
+
+        if (moveIndex === 0) {
+            return;
+        }
+        this.state.moveIndex--;
+        this.setState({
+            fen: this.state.game.fen(),
+            isBotTurn: !isBotTurn
+        });
+    }
+
+    goForward = () => {
+        const { moves, moveIndex, isBotTurn } = this.state;
+        if (moveIndex >= moves.length) {
+            return;
+        }
+
+        this.state.game.move(moves[moveIndex]);
+        this.state.moveIndex++;
+        this.setState({
+            fen: this.state.game.fen(),
+            isBotTurn: !isBotTurn
+        });
+    }
+
+    goToStart = () => {
+        for (let i = this.state.moveIndex; i >= 0; i--) {
+            this.goBack();
+        }
+    }
+
+    goToEnd = () => {
+        for (let i = this.state.moveIndex; i < this.state.moves.length; i++) {
+            this.goForward();
+        }
+    }
+    
     render() {
         const { game, fen, moveSquares, optionSquares, rightClickedSquares, moveTo, showPromotionDialog, orientation } = this.state;
+        let fillerSquares = [];
+        if (this.state.moves.length < 12 * 2) {
+            for (let i = 0; i < (12 * 2 - this.state.moves.length); i++) {
+                fillerSquares.push(0)
+            }
+        } else if (this.state.moves.length % 2 === 1) {
+            fillerSquares.push(0);
+        }
+
+        const customSquareStyles = this.state.moveIndex === this.state.moves.length ? (
+            {
+                ...moveSquares,
+                ...optionSquares,
+                ...rightClickedSquares
+            }
+        ) : (
+            {}
+        )
         return (
             <div className="playContainer">
                 <div className="boardContainerPlay">
                     <Chessboard id="ClickToMove" position={fen} boardOrientation={orientation} arePiecesDraggable={false} onSquareClick={this.onSquareClick} onSquareRightClick={this.onSquareRightClick} onPromotionPieceSelect={this.onPromotionPieceSelect} customBoardStyle={{
                         borderRadius: "4px",
                         boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
-                    }} customSquareStyles={{
-                        ...moveSquares,
-                        ...optionSquares,
-                        ...rightClickedSquares
-                    }} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
+                    }} customSquareStyles={customSquareStyles} promotionToSquare={moveTo} showPromotionDialog={showPromotionDialog} />
                     <div id="flipContainer">
                         <button id="flip" onClick={() => {this.setState({ orientation: this.state.orientation === "white" ? "black" : "white"})}}><i className="fa-solid fa-retweet"></i></button>
                     </div>
@@ -297,16 +397,30 @@ class PlayBoard extends Component {
                 <div className="sideMenuPlay">
                     <button id="back" onClick={() => {this.quitGame(); this.back();}}><i className="fa-solid fa-arrow-left"></i> Back</button>
                     <div className="moves">
-                        <div className="moveList"></div>
+                        <div className="moveList" ref={this.movesRef}>
+                            {
+                                this.state.moves.map((move, key) => {
+                                    let style = {};
+                                    if (key === this.state.moveIndex - 1) {
+                                        style = {backgroundColor: "rgb(136, 136, 136)"};
+                                    }
+                                    return <div key={key} className="move" style={style}>{move}</div>
+                                })
+                            }
+                            {
+                                fillerSquares.map((element, index) => (
+                                    <div key={index} className="move"></div>
+                                ))
+                            }
+                        </div>
                         <div className="navButtons">
-                            <button><i className="fa-solid fa-less-than-equal"></i></button>
-                            <button><i className="fa-solid fa-arrow-left"></i></button>
-                            <button><i className="fa-solid fa-arrow-right"></i></button>
-                            <button><i className="fa-solid fa-greater-than-equal"></i></button>
+                            <button onClick={this.goToStart}><i className="fa-solid fa-less-than-equal"></i></button>
+                            <button onClick={this.goBack}><i className="fa-solid fa-arrow-left"></i></button>
+                            <button onClick={this.goForward}><i className="fa-solid fa-arrow-right"></i></button>
+                            <button onClick={this.goToEnd}><i className="fa-solid fa-greater-than-equal"></i></button>
                         </div>
                     </div>
-                    <button id="resign"><i className="fa-regular fa-flag"></i> Resign</button>
-                    {/* <button onClick={() => { this.state.game.undo(); this.setState({ fen: this.state.game.fen() })}}>Undo</button> */}
+                    <button id="resign" onClick={this.quitGame}><i className="fa-regular fa-flag"></i> Resign</button>
                 </div>
             </div>
         )
