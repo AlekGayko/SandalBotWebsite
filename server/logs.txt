@@ -1,0 +1,8 @@
+'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPPP/RNBQK1BR b KQkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPPP/RNBQK2B b Qkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPPB/RNBQK3 b Qkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/8/8/PPPPPPP1/RNBQKB2 b Qkq - 0 1'
+'moves' not found within 'position fen rnb1kbnr/pppppppp/5q2/8/5P2/8/PPPPP1P1/RNBQKB2 b Qkq - 0 1'

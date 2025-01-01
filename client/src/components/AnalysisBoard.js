@@ -66,7 +66,7 @@ class AnalysisBoard extends Component {
                         break;
                     case "analysis":
                         const analysis = jsonMsg.info;
-
+                        analysis.visualPv = this.transformPv(analysis.pv);
                         this.setState({
                             analysis: analysis
                         });
@@ -184,17 +184,18 @@ class AnalysisBoard extends Component {
 
     switchSides = (event) => {
         const value = event.target.value;
-        console.log(this.state.game)
+
         this.state.game._turn = value;
         const fen = new FenParser(this.state.game.fen());
-        console.log(fen.turn)
+
         fen.turn = value;
-        console.log(fen.toString())
+
         this.state.game._positionCount = fen.toString();
         this.setState({
             chessBoardPosition: fen.toString(),
             side: value
         });
+        this.updateAnalysis(this.state.game.fen())
         console.log(this.state.game)
     }
 
@@ -235,7 +236,7 @@ class AnalysisBoard extends Component {
         const pieceChars = ["p", "b", "n", "r", "q", "k"];
         if (!noData) {
             if (analysis.score.slice(0, 4) === "mate") {
-                evaluation = "M" + analysis.score[4];
+                evaluation = "M" + Math.abs(parseInt(analysis.score.slice(4)));
             } else {
                 const sign = analysis.score >= 0 ? "+" : "";
                 evaluation = sign + (analysis.score / 100);
@@ -244,10 +245,13 @@ class AnalysisBoard extends Component {
 
         let evalBarStyle = {};
         let evalHeight = 50 + Math.min(45, Math.abs(0.2 * evaluation ** 3)) * Math.sign(evaluation);
+        let evalStyle = { backgroundColor: evaluation >= 0 ? "white" : "black", color:  evaluation >= 0 ? "black" : "white" };
         if (evaluation[0] === "M") {
-            const whiteWinning = parseInt(analysis.score.trim().split(" ")[1]) >= 0 ^ this.state.game.turn() === "b";
+            alert(analysis.score.slice(4))
+            const whiteWinning = parseInt(analysis.score.slice(4)) >= 0 ^ this.state.game.turn() === "b";
             evalBarStyle = { color: whiteWinning ? "black" : "white", top: whiteWinning ? "2.5%" : "97.5%" };
             evalHeight = whiteWinning ? 100 : 0;
+            evalStyle = { backgroundColor: whiteWinning ? "white" : "black", color:  whiteWinning ? "black" : "white" };
         } else {
             evalBarStyle = { color: evaluation >= 0 ? "black" : "white", top: evaluation >= 0 ? "2.5%" : "97.5%" };
         }
@@ -270,8 +274,8 @@ class AnalysisBoard extends Component {
                             Depth={noData ? " - " : analysis.depth}
                         </div>
                         <div className="eval-pv-container">
-                            <div className="eval" style={{backgroundColor: evaluation >= 0 ? "white" : "black", color:  evaluation >= 0 ? "black" : "white"}}>{ evaluation }</div>
-                            <div className="pv">{noData ? "-" : analysis.pv}</div>
+                            <div className="eval" style={evalStyle}>{ evaluation }</div>
+                            <div className="pv">{noData ? "-" : analysis.visualPv}</div>
                         </div>
                     </div>
                     <div className="fenDisplay">

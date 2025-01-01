@@ -89,10 +89,6 @@ class Engine {
         this.childProcess.on('close', (code) => {
             console.log(`Child process exited with code ${code}`);
             this.childProcess = null;
-
-            if (code !== 0) {
-                console.log('Process terminated unexpectedly. Restarting...');
-            }
         });
 
         this.childProcess.on('error', (error) => {
@@ -104,7 +100,7 @@ class Engine {
     // Kill the chess engine process
     killProcess() {
         if (this.childProcess) {
-            this.childProcess.kill();
+            this.childProcess.kill('SIGTERM');
         }
     }
 
