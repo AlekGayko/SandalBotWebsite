@@ -48,7 +48,7 @@ class Engine {
     startProcess() {
         console.log(exePath)
         this.childProcess = spawn(exePath);
-
+        this.childProcess.stdin.write('setoption name Hash value 64\r\n');
         this.childProcess.stdout.on('data', (data) => {
             let res = data.toString();
             console.log(res);
