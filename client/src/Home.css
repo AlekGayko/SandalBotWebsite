@@ -15,13 +15,13 @@ section {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    height: 20rem;
+    min-height: 20rem;
 }
 
 .title {
     display: flex;
     flex-direction: column;
-    height: 20rem;
+    justify-content: center;
 }
 
 .title h1 {
@@ -32,6 +32,7 @@ section {
 .title h2 {
     color: var(--opposite-color);
     margin-top: 1rem;
+    text-align: justify;
 }
 
 .options {
@@ -98,4 +99,119 @@ section {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+@media (max-width: 1500px) {
+    #elo {
+        gap: 0.75rem;
+    }
+
+    #home > section {
+        padding: 0;
+    }
+}
+
+@media (max-width: 1100px) {
+    #elo > div > h3 {
+        font-size: 0.9rem;
+    }
+
+    .titleScreen h1 {
+        font-size: 2rem;
+    }
+
+    .titleScreen h2 {
+        font-size: 1rem;
+    }
+
+    .homeDetails {
+        font-size: 1rem;
+        align-items: center;
+        text-align: center;
+    }
+
+    .homeDetails button {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 900px) {
+    #elo > div {
+        gap: 0.1rem;
+    }
+
+    #elo > div > h3 {
+        font-size: 0.7rem;
+    }
+
+    .titleScreen {
+        min-height: 15rem;
+    }
+    .titleScreen img {
+        height: 160px;
+    }
+
+    #home {
+        padding: 1.5rem 3rem;
+        gap: 1rem;
+    }
+}
+@media (max-width: 700px) {
+    .titleScreen {
+        flex-direction: column;
+    }
+
+    .titleScreen img {
+        height: 120px;
+    }
+
+    .title {
+        text-align: center;
+    }
+
+    .title h2 {
+        text-align: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .homeDetails button {
+        padding: 0.5rem 0.4rem;
+    }
+
+    .titleScreen img {
+        height: 100px;
+    }
+
+    #elo {
+        align-items: center;
+    }
+
+    #elo > div > h3 {
+        font-size: 0.6rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .homeDetails {
+        font-size: 1rem;
+    }
+
+    .homeDetails > div {
+        flex-direction: column;
+    }
+
+    .homeDetails button {
+        padding: 0.5rem 0.6rem;
+    }
+
+    #home {
+        padding: 1.5rem 1.5rem;
+    }
+
+    
+
+    .title h1 {
+        font-size: 1.5rem;
+    }
 }

@@ -4,24 +4,23 @@ main {
 }
 
 iframe {
-    max-width: 95%;
-    width: 400px;
     height: 450px;
     display: block;
 
 }
 
 .games {
-    margin: auto;
+    padding: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .slick-slider {
-    max-width: 900px;
-    margin: 0 auto;
+    width: 900px;
 }
 
 .slick-list {
-    max-height: 378px;
     overflow-y: hidden;
 }
 
@@ -35,4 +34,35 @@ iframe {
 
 .slick-dots {
     margin: 0 auto;
+}
+
+#watch > h2 {
+    text-align: center;
+}
+
+@media (max-width: 1400px) {
+    .slick-slider {
+        max-width: 700px;
+    }
+}
+
+@media (max-width: 1150px) {
+    .slick-slider {
+        max-width: 300px;
+    }
+    
+    .slick-list {
+        max-height: 370px;
+        max-width: 285px;
+    }
+}
+
+@media (max-width: 500px) {
+    .slick-slider {
+        max-width: 200px;
+    }
+
+    .slick-list {
+        max-height: 290px;
+    }
 }

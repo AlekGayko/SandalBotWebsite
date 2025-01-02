@@ -8,7 +8,7 @@ function Analysis() {
     return (
         <div className="pageWrapper">
             <Nav />
-            <main>
+            <main id="analysis">
                 <h1>Analysis Board</h1>
                 <div className="horizontalLine"></div>
                 <AnalysisBoard />

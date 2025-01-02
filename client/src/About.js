@@ -24,7 +24,7 @@ function About() {
                     <a href="#search">Search Algorithm</a>
                     <a href="#evaluation">Evaluation</a>
                     <a href="#hashtable">Transposition Table</a>
-                    <a href="https://github.com/DirtySandals/SandalBotV2"><i class="fa-brands fa-github"></i>Code</a>
+                    <a href="https://github.com/DirtySandals/SandalBotV2"><i className="fa-brands fa-github"></i>Code</a>
                 </div>
                 <div className="horizontalLine"></div>
                 <section id="search" className="enginepart">
@@ -54,7 +54,7 @@ function About() {
                                         deepening also allows for time-dependent searches - no longer having to wait until depth is searched or interrupted. It allows the engine to use 
                                         time more effectively, providing a best move even if the search is interrupted before completion.
                                     </p>
-                                    <img src="ideep.png" height="300px"></img>
+                                    <img src="ideep.png" width="300px"></img>
                                 </div>
                             </div>
                         </div>

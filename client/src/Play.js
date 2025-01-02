@@ -45,7 +45,7 @@ class Play extends Component {
         return (
             <div className="pageWrapper">
                 <Nav />
-                <main>
+                <main id="play">
                     <h1>Play SandalBot</h1>
                     <div className="horizontalLine"></div>
                     {

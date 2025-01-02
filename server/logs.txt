@@ -1,1 +1,4 @@
 Command received: setoption name Hash value 64
+Command received: position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+Command received: go

@@ -54,7 +54,7 @@ class Home extends Component {
         return (
             <div className="pageWrapper">
                 <Nav />
-                <main>
+                <main id="home">
                     <section id="elo">
                         <div>
                             <h3>Bullet Rating: </h3>

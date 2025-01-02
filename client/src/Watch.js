@@ -8,9 +8,9 @@ function Watch() {
     return (
         <div className="pageWrapper">
             <Nav />
-            <main>
+            <main id="watch">
                 <h2>Current Games</h2>
-                <LichessGames finished={false} maxGames={5}/>
+                <LichessGames finished={true} maxGames={1}/>
                 <div className="horizontalLine"></div>
                 <h2>Most Recent Games</h2>
                 <LichessGames finished={true} maxGames={9} />

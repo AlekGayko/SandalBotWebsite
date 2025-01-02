@@ -6,8 +6,9 @@ function Footer() {
             <a className="footerGit" href="https://github.com/DirtySandals/SandalBotV2"><i className="fa-brands fa-github"></i></a>
             <a className="footerLichess" href="https://lichess.org/@/SandalBot"><img src="lichess.svg" alt="Lichess Logo"></img></a>
             <div className="footerText">
-                <p>A project by Aleksander Gayko</p>
-                <p>© SandalBot. All rights reserved.</p>
+                <p>SandalBot</p>
+                <p>A chess engine by Aleksander Gayko</p>
+                {/* <p>© SandalBot. All rights reserved.</p> */}
             </div>
         </footer>
     )

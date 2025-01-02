@@ -245,31 +245,38 @@ class AnalysisBoard extends Component {
 
         let evalBarStyle = {};
         let evalHeight = 50 + Math.min(45, Math.abs(0.2 * evaluation ** 3)) * Math.sign(evaluation);
-        let evalStyle = { backgroundColor: evaluation >= 0 ? "white" : "black", color:  evaluation >= 0 ? "black" : "white" };
+        let evalStyle = { 
+            backgroundColor: evaluation >= 0 ^ this.state.game.turn() === "b" ? "white" : "black", 
+            color:  evaluation >= 0 ^ this.state.game.turn() === "b" ? "black" : "white" 
+        };
         if (evaluation[0] === "M") {
-            alert(analysis.score.slice(4))
             const whiteWinning = parseInt(analysis.score.slice(4)) >= 0 ^ this.state.game.turn() === "b";
             evalBarStyle = { color: whiteWinning ? "black" : "white", top: whiteWinning ? "2.5%" : "97.5%" };
             evalHeight = whiteWinning ? 100 : 0;
             evalStyle = { backgroundColor: whiteWinning ? "white" : "black", color:  whiteWinning ? "black" : "white" };
         } else {
-            evalBarStyle = { color: evaluation >= 0 ? "black" : "white", top: evaluation >= 0 ? "2.5%" : "97.5%" };
+            evalBarStyle = { 
+                color: evaluation >= 0 ^ this.state.game.turn() === "b" ? "black" : "white", 
+                top: evaluation >= 0 ^ this.state.game.turn() === "b" ? "2.5%" : "97.5%" 
+            };
         }
 
         return (
             <div className="analysisContainer">
-                <div className="evalBar">
-                    <div style={{ height: `${ evalHeight }%` }}></div>
-                    <p style={evalBarStyle}>{evaluation}</p>                
+                <div className="board-eval">
+                    <div className="evalBar">
+                        <div style={{ height: `${ evalHeight }%` }}></div>
+                        <p style={evalBarStyle}>{evaluation}</p>                
+                    </div>
+                    <div className="boardContainerAnalysis">
+                        <Chessboard id="defaultBoard" position={chessBoardPosition} onPieceDrop={this.onDrop} onSquareClick={this.onSquareClick} customBoardStyle={{
+                        borderRadius: "4px",
+                        boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
+                        }} customArrows={bestMove ? [[(bestMove.substring(0, 2)), (bestMove.substring(2, 4)), "rgb(0, 128, 0)"]] : undefined} />
                 </div>
-                <div className="boardContainerAnalysis">
-                    <Chessboard id="defaultBoard" position={chessBoardPosition} onPieceDrop={this.onDrop} onSquareClick={this.onSquareClick} customBoardStyle={{
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)"
-                    }} customArrows={bestMove ? [[(bestMove.substring(0, 2)), (bestMove.substring(2, 4)), "rgb(0, 128, 0)"]] : undefined} />
                 </div>
                 <div className="sideMenuAnalysis">
-                    <div>
+                    <div className="depth-pv">
                         <div>
                             Depth={noData ? " - " : analysis.depth}
                         </div>

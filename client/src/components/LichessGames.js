@@ -56,31 +56,31 @@ class LichessGames extends Component {
     }
 
     render() {
-        const { urls, maxGames } = this.state;
+        const { urls } = this.state;
 
-        const slides = maxGames > 3 ? 3 : maxGames;
         const settings = {
             dots: true,
             infinite: false,
-            speed: 500,
-            slidesToShow: slides,
-            slidesToScroll: slides,
+            speed: 300,
+            slidesToShow: 1,
+            slidesToScroll: 1,
             responsive: [
                 {
                   breakpoint: 1400,
                   settings: {
-                    slidesToShow: 2,
-                    slidesToScroll: 2,
-                    infinite: true,
-                    dots: true
+                    slidesToShow: 1,
+                    slidesToScroll: 1,
+                    infinite: false
                   }
                 },
                 {
-                  breakpoint: 950,
+                  breakpoint: 1000,
                   settings: {
+                    className: "center",
                     slidesToShow: 1,
                     slidesToScroll: 1,
-                    initialSlide: 2
+                    initialSlide: 2,
+                    dots: false
                   }
                 }
               ]
@@ -91,36 +91,20 @@ class LichessGames extends Component {
                 {
                     urls ? (
                         urls.length ? (
-                            maxGames >-1 ? (
-                                <Slider {...settings}>
-                                    {
-                                        urls.map((gameUrl, key) => 
-                                            <iframe 
-                                                src={gameUrl + "?them=autho"} 
-                                                frameBorder={0} 
-                                                key={key} 
-                                                scrolling="no" 
-                                                title="Lichess Game"
-                                            ></iframe>
-                                        )
-                                    }
-                                </Slider>
-                            ) : (
-                                <div>
-                                    {
-                                        urls.map((gameUrl, key) => 
-                                            <iframe 
-                                                src={gameUrl + "?them=autho"} 
-                                                frameBorder={0} 
-                                                key={key} 
-                                                scrolling="no" 
-                                                title="Lichess Game"
-                                            ></iframe>
-                                        )
-                                    }
-                                </div>
-                            )
-                            
+                            <Slider {...settings}>
+                                {
+                                    urls.map((gameUrl, key) => 
+                                        <iframe 
+                                            className="game"
+                                            src={gameUrl + "?them=autho"} 
+                                            frameBorder={0} 
+                                            key={key} 
+                                            scrolling="no" 
+                                            title="Lichess Game"
+                                        />
+                                    )
+                                }
+                            </Slider>
                         ) : (
                             <p>No Games Found</p>
                         )
