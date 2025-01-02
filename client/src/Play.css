@@ -151,11 +151,11 @@ form button {
 .moveList {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr;
+    grid-template-rows: repeat(8, 1fr);
     width: 100%;
     overflow-y: auto;
-    max-height: calc(12 * 30px + 4px);
     max-width: 200px;
+    max-height: 366px;
     border: 3px solid black;
 }
 
@@ -204,7 +204,7 @@ form button {
     }
 
     .moveList {
-        max-height: calc(6 * 30px + 4px)
+        max-height: 246px;
     }
 }
 
@@ -259,6 +259,10 @@ form button {
 
     #play {
         padding-bottom: 4rem;
+    }
+
+    .moveList {
+        width: 500px;
     }
 }
 

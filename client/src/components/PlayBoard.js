@@ -42,10 +42,6 @@ class PlayBoard extends Component {
         this.startSession();
     }
 
-    componentDidUpdate() {
-        this.scrollToBottom();
-    }
-
     countDown = () => {
         if (this.state.gameOver) {
             return;
@@ -234,6 +230,7 @@ class PlayBoard extends Component {
         if (makeBotMove) {
             this.generateBotMove(moveObj.from, moveObj.to, moveObj.promotion)
         }
+        this.scrollToBottom();
         return move;
     }
 
