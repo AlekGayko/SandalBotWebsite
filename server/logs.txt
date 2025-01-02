@@ -1,81 +1,8 @@
 Command received: setoption name Hash value 64
-Command received: position startpos moves e2e3q 
-Make moves after setting position: 1
-Command received: go wtime 298000 btime 300000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q 
-Make moves after setting position: 3
-Command received: go wtime 296000 btime 299000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q 
-Make moves after setting position: 5
-Command received: go wtime 296000 btime 297000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q 
-Make moves after setting position: 7
-Command received: go wtime 296000 btime 295000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q 
-Make moves after setting position: 9
-Command received: go wtime 294000 btime 294000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q 
-Make moves after setting position: 11
-Command received: go wtime 271000 btime 293000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q 
-Make moves after setting position: 13
-Command received: go wtime 267000 btime 292000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q 
-Make moves after setting position: 15
-Command received: go wtime 265000 btime 291000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q 
-Make moves after setting position: 17
-Command received: go wtime 266000 btime 289000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q 
-Make moves after setting position: 19
-Command received: go wtime 266000 btime 288000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q 
-Make moves after setting position: 21
-Command received: go wtime 267000 btime 287000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q 
-Make moves after setting position: 23
-Command received: go wtime 252000 btime 285000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q 
-Make moves after setting position: 25
-Command received: go wtime 247000 btime 283000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q 
-Make moves after setting position: 27
-Command received: go wtime 227000 btime 281000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q 
-Make moves after setting position: 29
-Command received: go wtime 225000 btime 279000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q a7a5 d2e4q 
-Make moves after setting position: 31
-Command received: go wtime 221000 btime 277000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q a7a5 d2e4q a5b4 e4f6q 
-Make moves after setting position: 33
-Command received: go wtime 223000 btime 275000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q a7a5 d2e4q a5b4 e4f6q g7f6 a3b4q 
-Make moves after setting position: 35
-Command received: go wtime 223000 btime 273000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q a7a5 d2e4q a5b4 e4f6q g7f6 a3b4q a8a1 d1a1q 
-Make moves after setting position: 37
-Command received: go wtime 223000 btime 271000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
-Command received: position startpos moves e2e3q g8f6 b1c3q e7e6 g1f3q d7d5 d2d4q f8b4 a2a3q b4c3 b2c3q e8g8 c3c4q c7c5 c4d5q e6d5 f1d3q c5c4 d3e2q b8c6 e1g1q c8f5 f1e1q f6e4 c1d2q f8e8 d2b4q d8c7 f3d2q a7a5 d2e4q a5b4 e4f6q g7f6 a3b4q a8a1 d1a1q f5c2 a1c3q 
-Make moves after setting position: 39
-Command received: go wtime 218000 btime 270000 winc 3000 binc 3000
-Response: Thinking for: 4500 ms.
+Command received: position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+Command received: go
+Command received: stop
+Command received: position fen rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1
+'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1'
+Command received: go

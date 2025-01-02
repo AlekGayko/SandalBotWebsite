@@ -47,6 +47,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/hi', (req, res, next) => {
+  res.send("hi");
+});
+
 app.use('/api', apiRouter);
 
 app.get('*', function(req, res, next) {
