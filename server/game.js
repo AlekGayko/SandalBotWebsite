@@ -1,16 +1,16 @@
-import { spawn } from 'node:child_process';
+import { spawn } from "node:child_process";
 import { Chess } from "chess.js";
 import http from "http";
 import { WebSocketServer } from "ws";
 import dotenv from "dotenv";
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { FenParser } from "@chess-fu/fen-parser";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: resolve(__dirname, '../.env' )});
+dotenv.config({ path: resolve(__dirname, "../.env" )});
 
 const exePath = process.env.ENGINE;
 const TIMEOUT_DURATION = 600000; // 10 minutes
@@ -46,12 +46,10 @@ class Engine {
 
     // Start chess engine process
     startProcess() {
-        console.log(exePath)
         this.childProcess = spawn(exePath);
         this.childProcess.stdin.write('setoption name Hash value 64\r\n');
         this.childProcess.stdout.on('data', (data) => {
             let res = data.toString();
-            console.log(res);
             res = res.trim().split(" ");
             if (res.length === 0) {
                 return;
@@ -165,16 +163,13 @@ class Engine {
         }
         this.resetInfo();
 
-        console.log(moveObj)
         const move = this.gameClient.move({
             from: moveObj.from,
             to: moveObj.to,
             promotion: moveObj.promotion
         }); 
-        console.log(move)
-        this.moveList += moveObj.from + moveObj.to + moveObj.promotion + " ";
 
-        console.log(this.moveList)
+        this.moveList += moveObj.from + moveObj.to + moveObj.promotion + " ";
     }
 
     async generateMove(times) {
@@ -189,7 +184,7 @@ class Engine {
         this.childProcess.stdin.write(positionCommand);
 
         let moveCommand = `go wtime ${times.wtime} btime ${times.btime} winc ${times.winc} binc ${times.binc}\r\n`;
-        console.log(moveCommand)
+
         this.childProcess.stdin.write(moveCommand);
     }
 
@@ -231,9 +226,7 @@ class Game {
         this.gameServer = http.createServer();
         this.wss = new WebSocketServer({ server: this.gameServer });
         this.defineWssHandlers();
-        this.gameServer.listen(this.port, () => {
-            console.log(`Game Server listening on port ${this.port}`);
-        });
+        this.gameServer.listen(this.port);
         this.engine = new Engine(this.wss);
         this.inactive = false;
     }
@@ -251,7 +244,6 @@ class Game {
             const resetTimer = () => {
                 clearTimeout(timeoutId);
                 timeoutId = setTimeout(() => {
-                    console.log("Timed Out");
                     ws.close();
                     this.engine.killProcess();
                     this.inactive = true;
@@ -267,7 +259,6 @@ class Game {
                 try {
                     resetTimer();
                     const jsonMsg = JSON.parse(message);
-                    console.log(jsonMsg)
                     switch (jsonMsg.type) {
                         case "ping":
                             const msg = { type: "ping", state: this.engine.state };

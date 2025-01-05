@@ -1,8 +1,5 @@
 Command received: setoption name Hash value 64
-Command received: position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-Command received: go
-Command received: stop
-Command received: position fen rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1
-'moves' not found within 'position fen rnbqkbnr/pppppppp/8/8/3B4/8/PPPPPPPP/RN1QKBNR w KQkq - 0 1'
-Command received: go
+Command received: position startpos moves e2e4q 
+Make moves after setting position: 1
+Command received: go wtime 299000 btime 300000 winc 3000 binc 3000
+Response: Thinking for: 4500 ms.

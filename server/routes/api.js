@@ -22,8 +22,6 @@ const cleanUpGames = () => {
             gamesDeleted++;
         }
     });
-
-    console.log('Games Deleted', gamesDeleted);
 };
 
 setInterval(cleanUpGames, CLEANUP_INTERVAL);

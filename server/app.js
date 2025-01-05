@@ -4,22 +4,11 @@ import path, { dirname } from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import session from 'express-session';
-import mysql from 'mysql';
 import { fileURLToPath } from 'url';
 
 import apiRouter from './routes/api.js';
 
 var app = express();
-
-var dbConnectionPool = mysql.createPool({
-  host: process.env.ROOT_DOMAIN,
-  multipleStatements: true
-});
-
-app.use(function(req, res, next) {
-  req.pool = dbConnectionPool;
-  next();
-});
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -45,10 +34,6 @@ app.use((req, res, next) => {
     req.session.id = idCounter++;
   }
   next();
-});
-
-app.use('/hi', (req, res, next) => {
-  res.send("hi");
 });
 
 app.use('/api', apiRouter);
