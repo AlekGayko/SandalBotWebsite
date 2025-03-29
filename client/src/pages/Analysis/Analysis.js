@@ -1,7 +1,7 @@
 import React from 'react';
-import Nav from './components/Nav';
-import Footer from './components/Footer';
-import AnalysisBoard from './components/AnalysisBoard';
+import Nav from '../../components/Nav';
+import Footer from '../../components/Footer';
+import AnalysisBoard from '../../components/AnalysisBoard';
 import "./Analysis.css";
 
 function Analysis() {

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import Nav from './components/Nav';
+import Nav from '../../components/Nav';
 import './Home.css';
-import Footer from './components/Footer';
+import Footer from '../../components/Footer';
 import axios from 'axios';
 
 class Home extends Component {
